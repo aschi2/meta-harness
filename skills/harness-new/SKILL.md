@@ -27,7 +27,7 @@ Build a repo profile before reading the KB, so KB guidance can be applied condit
 
 ### 2. Read the KB
 
-Read every top-level topic file in `${CLAUDE_PLUGIN_ROOT}/kb/` (skip CHANGELOG.md), plus `kb/languages/<lang>.md` for each language in the repo profile that has a file — language files not matching the profile stay unread. Apply guidance conditionally on the repo profile — the KB states which practices are size- or stack-dependent. Where the KB marks something contested, pick the conservative option and note the choice in the generation report.
+Read every top-level topic file in `${CLAUDE_PLUGIN_ROOT}/kb/` (skip CHANGELOG.md), plus `kb/languages/<lang>.md` for each profiled language and `kb/archetypes/<type>.md` for each profiled project type (web-app, mobile, data-ml, cli-library, services-infra; a repo can match several) — files not matching the profile stay unread. Apply guidance conditionally on the repo profile — the KB states which practices are size- or stack-dependent. Where the KB marks something contested, pick the conservative option and note the choice in the generation report.
 
 ### 3. Plan, then generate
 

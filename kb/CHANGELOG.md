@@ -2,6 +2,16 @@
 
 Newest first — new entries go at the top, with a unique heading (date + short slug). `/harness-update` scopes upgrades to the entries above a manifest's recorded `kbEntry`.
 
+## 2026-08-24 — archetype playbooks
+
+New `kb/archetypes/` layer (5 parallel agents, primary sources fetched 2026-08-24), loaded by profiled project type; `/harness-new` step 2 updated.
+
+- archetypes/web-app: NEW — Playwright Agents + auth-state tiers + fast-loop test flags; preview deploys as verification (bypass-secret wiring, per-preview DB branches); named seed/reset commands (Prisma v7 removed auto-seed); Storybook never-hallucinate-props guardrail; RSC boundary rules incl. the edge-runtime stale-guidance trap.
+- archetypes/mobile: NEW — first-party tooling preferred (Flutter MCP/plugin, XcodeBuildMCP, Android agent CLI, Expo defaults); verification ladder (headless → JVM screenshots → simulator); exact-simulator baseline discipline; docs-currency countermeasures (Apple docs invisible to agents); signing/store as hard supervision boundary.
+- archetypes/data-ml: NEW — make data visible (schema contracts, profiling commands, data-shaped verifiers); version pins unusually load-bearing; smoke-train + multi-seed + tamper-resistant eval (ML reward hacking measured at 30%); constrained-surface + real-run loop; GPU limits stated with remote-run substitute.
+- archetypes/cli-library: NEW — API-diff gates + agent fence lines from real AGENTS.md files (version/release/`.github/` off-limits); docs-as-tests; downstream test suites; cross-platform "what CI covers that local can't"; trusted-publishing release safety; humans merge Release PRs.
+- archetypes/services-infra: NEW — tiers in prose, enforcement in config (Replit incident evidence); migration lint + shadow-DB loops + migrations-dir locks; plan-only IaC with policy gates; GitOps as the agent boundary; read-only prod observability.
+
 ## 2026-08-24 — operations round
 
 Five new topics on harness operations (5 parallel agents, primary sources fetched 2026-08-24), plus one correction.

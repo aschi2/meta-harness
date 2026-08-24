@@ -39,4 +39,4 @@ Topic files:
 - `mcp-and-tools.md` — which external tools earn their context cost; CLI-first wiring
 - `model-routing.md` — model/effort tiering; the small repo-level routing surface
 
-`languages/` holds per-language playbooks (`python.md`, `typescript.md`, `go.md`, `rust.md`, `cpp.md`) with the same file conventions. Generators read only the ones matching the target repo's languages; a language without a file just gets the general topics.
+`languages/` holds per-language playbooks (`python.md`, `typescript.md`, `go.md`, `rust.md`, `cpp.md`) and `archetypes/` holds per-project-type playbooks (`web-app.md`, `mobile.md`, `data-ml.md`, `cli-library.md`, `services-infra.md`), all with the same file conventions. Generators read only the ones matching the target repo's profile (a repo can match several archetypes); a language or type without a file just gets the general topics.
