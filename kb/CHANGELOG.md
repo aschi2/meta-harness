@@ -2,6 +2,17 @@
 
 Newest first — new entries go at the top, with a unique heading (date + short slug). `/harness-update` scopes upgrades to the entries above a manifest's recorded `kbEntry`.
 
+## 2026-08-24 — operations round
+
+Five new topics on harness operations (5 parallel agents, primary sources fetched 2026-08-24), plus one correction.
+
+- testing-strategy: NEW — test-gaming is measured (reward hacking up to 100% on specific tasks); countermeasures (anti-gaming AGENTS.md lines, red-before-green with committed failing tests, test-path locks, writer/reviewer split); coverage as ratchet not gate; mutation testing validates suites; differential/oracle testing for ports; TDD offered not imposed.
+- runtime-feedback: NEW — log-to-file + console-forwarding + dev-server guards as the highest-ROI surface; one browser tool per web repo (CLI preferred); screenshot-compare for verification not pixel refinement; debuggers not wired by default; per-project-kind checklist.
+- autonomous-operation: NEW (opt-in layer) — initializer + progress log + flip-only feature list + test tiers; productized loop ladder over hand-rolled loops; documented loop failure modes; worktree/PR-per-agent parallelism; containment governing rule (bypass only in containers).
+- mcp-and-tools: NEW — context economics (deferral ~85% cut, accuracy improved); CLI-first with the tool-design caveat; category verdicts (browser strongest, DB weakest); wiring/scoping rules incl. headless-loads-without-approval trap; most repos correctly get zero project MCP servers.
+- model-routing: NEW — measured basis for plan-strong/execute-cheap (advisor −11.9% cost/+2.7pp); effort guidance; repo-level surface limited to subagent/skill/CI model+effort pins; auto-routers unmeasured.
+- languages/cpp: corrected — Deep Lake 15h case study downgraded to single-source (follow-up search could not corroborate); mechanisms unaffected.
+
 ## 2026-08-24 — language playbooks
 
 New `kb/languages/` layer (5 parallel research agents, primary sources fetched 2026-08-24), loaded selectively by detected language. `/harness-new` step 2 updated accordingly.

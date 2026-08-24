@@ -33,5 +33,10 @@ Topic files:
 - `security.md` — defensive defaults: injection, supply chain, secrets, sandbox, CI gates
 - `team-workflows.md` — PR conventions, review structure, CI gates, config distribution
 - `harness-evals.md` — measuring whether harness changes help; proxies and noise
+- `testing-strategy.md` — anti-test-gaming, agent-written test quality, test tiers, TDD
+- `runtime-feedback.md` — logs, browser loops, debuggers: how agents see running code
+- `autonomous-operation.md` — scaffolding for unattended runs, loops, parallelism, containment
+- `mcp-and-tools.md` — which external tools earn their context cost; CLI-first wiring
+- `model-routing.md` — model/effort tiering; the small repo-level routing surface
 
 `languages/` holds per-language playbooks (`python.md`, `typescript.md`, `go.md`, `rust.md`, `cpp.md`) with the same file conventions. Generators read only the ones matching the target repo's languages; a language without a file just gets the general topics.

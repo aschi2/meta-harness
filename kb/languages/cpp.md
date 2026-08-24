@@ -5,7 +5,7 @@ reviewed: 2026-08-24
 
 # C++ playbook
 
-C++ is the worst mainstream language for agents on benchmarks (3.1% resolved on Multi-SWE-bench vs 44.6% Python, same model — https://arxiv.org/html/2504.02605v1, 2025-04; bottom of SWE-bench Multilingual). But outcome tracks HARNESS INVESTMENT: a 15-hour autonomous run shipped an ASan-verified 2x database speedup — and spent 10 of those 15 hours discovering how to build and run ASan, which pre-wired sanitizer infra would have eliminated (~3x wall-time estimate) (https://www.deeplake.ai/blog/coding-agent-15h, 2026-01-28). C++ repos get the FULLEST harness this KB generates.
+C++ is the worst mainstream language for agents on benchmarks (3.1% resolved on Multi-SWE-bench vs 44.6% Python, same model — https://arxiv.org/html/2504.02605v1, 2025-04; bottom of SWE-bench Multilingual). But outcome tracks HARNESS INVESTMENT: a reported 15-hour autonomous run shipped an ASan-verified 2x database speedup — and spent 10 of those 15 hours discovering how to build and run ASan, which pre-wired sanitizer infra would have eliminated (~3x wall-time estimate) (https://www.deeplake.ai/blog/coding-agent-15h, 2026-01-28) [single-source case study — a follow-up search could not corroborate it; the underlying mechanisms (ccache, sanitizer presets, staged tests) are corroborated by primary tool docs]. C++ repos get the FULLEST harness this KB generates.
 
 ## Build system (the load-bearing layer)
 
