@@ -2,6 +2,28 @@
 
 Newest first — new entries go at the top, with a unique heading (date + short slug). `/harness-update` scopes upgrades to the entries above a manifest's recorded `kbEntry`.
 
+## 2026-08-24 — language playbooks
+
+New `kb/languages/` layer (5 parallel research agents, primary sources fetched 2026-08-24), loaded selectively by detected language. `/harness-new` step 2 updated accordingly.
+
+- languages/python: NEW — uv + `uv run` everything; ruff lint+format ("do not call Black"); type checker contested → name one in AGENTS.md (pyright default); proven hook wiring (ruff PostToolUse, typecheck Stop gate, pip-blocking PreToolUse); fixture-magic and venv failure modes.
+- languages/typescript: NEW — pnpm default; TS7 Go compiler makes tsc viable per-edit but its missing API pushes per-edit lint to Biome; strict tsconfig canon; turbo --affected/boundaries for monorepos; framework-currency countermeasure (local docs index in AGENTS.md, Vercel eval); vitest run not watch.
+- languages/go: NEW — loop-mechanics advantage vs weak benchmark competence; agent-mistake linter set (errcheck/nilerr/etc., untruncated output config); test-cache semantics ("(cached)" = pass); -race in CI not hooks; go generate and go.work rules; gopls MCP.
+- languages/rust: NEW — bounded-task strength vs multi-file collapse (benchmark split explained); cargo check + nextest filtersets + `cargo test --doc`; command-level -D warnings never source-level; unwrap/unsafe lint policy; cargo-deny/hack; workspace splitting as context win.
+- languages/cpp: NEW — worst benchmark language, best harness ROI (15h-run evidence: pre-wired sanitizers ≈3x wall time); CMake presets + compile_commands.json mandatory; ASan+UBSan floor with -fno-sanitize-recover; clang-tidy agent set; ABI sign-off and target-ownership rules; OSS AI policies (LLVM/Ladybird).
+
+## 2026-08-24 — expansion round
+
+Five new topics from a second research pass (5 parallel agents, primary sources fetched 2026-08-24), plus cross-references into existing topics.
+
+- spec-and-planning: NEW — plan-sized-to-task default (skip below one-sentence-diff threshold; interview→SPEC.md→fresh session above it); heavyweight SDD (Spec Kit/Kiro) only on explicit request; PRD-mode sequencing (spec → conventions → verification harness → implement).
+- agent-friendly-code: NEW — types as free verification sensor (TS/Go greenfield default); tests as the primary enabler with commit-failing-tests TDD; locality evidence; brownfield advisory ladder (characterization tests first); per-language benchmark rankings flagged unreliable.
+- security: NEW — lethal-trifecta threat model with 2025–26 incident evidence; secrets deny rules + sandbox defaults; component pinning/review policy; CI Rule of Two; anti-slopsquatting rule; harness files reviewed as attack surface.
+- team-workflows: NEW — small-PR norms, attribution as a team decision, AI-review noise controls, CI as harness-independent enforcement, committed-settings/plugin distribution, calibrated impact claims (Faros/DORA/METR).
+- harness-evals: NEW — error-analysis-first golden suites, with/without ablation (≥3 runs), power/noise limits (small deltas are noise), pruning as first-class, adoption-reality stats backing conservative defaults.
+- context-files: added — instruction files are injection attack surface, PR-review them like code.
+- automation-surface: added — permissions emission now routed through security.md checklist.
+
 ## 2026-08-24 — initial corpus
 
 Full research pass across all five topics (5 parallel agents, primary sources fetched 2026-08-24).

@@ -28,3 +28,10 @@ Topic files:
 - `code-navigation.md` — navigation/lookup by codebase size
 - `automation-surface.md` — skills, commands, hooks, subagents, permissions, verification loops
 - `harness-targets.md` — per-tool config surfaces and cross-tool compatibility
+- `spec-and-planning.md` — spec/plan workflows and PRD-mode sequencing
+- `agent-friendly-code.md` — code/stack properties that help agents; advisory guidance
+- `security.md` — defensive defaults: injection, supply chain, secrets, sandbox, CI gates
+- `team-workflows.md` — PR conventions, review structure, CI gates, config distribution
+- `harness-evals.md` — measuring whether harness changes help; proxies and noise
+
+`languages/` holds per-language playbooks (`python.md`, `typescript.md`, `go.md`, `rust.md`, `cpp.md`) with the same file conventions. Generators read only the ones matching the target repo's languages; a language without a file just gets the general topics.

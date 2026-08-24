@@ -23,11 +23,11 @@ Build a repo profile before reading the KB, so KB guidance can be applied condit
 - Size tier: source-file count and LOC — `git ls-files` in a git repo, `find` otherwise, in both cases excluding vendored/generated directories even if tracked; `tokei`/`cloc` if available for LOC. Apply the tier rules (including the structure-beats-count precedence) from `kb/code-navigation.md`.
 - Existing tooling: formatter, linter, typechecker, test runner, CI — with the exact commands (read package.json/Makefile/justfile/CI config; verify commands actually run).
 - Existing harness material: AGENTS.md, CLAUDE.md, .cursor/, .claude/, .codex/, .github/copilot-instructions.md, docs/. Never overwrite any of it blind — read it, fold the still-true content into the new harness, and report what you dropped and why.
-- For PRD mode: extract product domain, planned stack, and explicit constraints.
+- For PRD mode: extract product domain, planned stack, and explicit constraints, then follow the PRD-mode sequencing and stack guidance in `kb/spec-and-planning.md` and `kb/agent-friendly-code.md`.
 
 ### 2. Read the KB
 
-Read every topic file in `${CLAUDE_PLUGIN_ROOT}/kb/` (skip CHANGELOG.md). Apply guidance conditionally on the repo profile — the KB states which practices are size- or stack-dependent. Where the KB marks something contested, pick the conservative option and note the choice in the generation report.
+Read every top-level topic file in `${CLAUDE_PLUGIN_ROOT}/kb/` (skip CHANGELOG.md), plus `kb/languages/<lang>.md` for each language in the repo profile that has a file — language files not matching the profile stay unread. Apply guidance conditionally on the repo profile — the KB states which practices are size- or stack-dependent. Where the KB marks something contested, pick the conservative option and note the choice in the generation report.
 
 ### 3. Plan, then generate
 
@@ -66,4 +66,4 @@ Write `.harness/manifest.json` in the target repo:
 
 ### 6. Report
 
-End with: files generated, per-tool coverage, KB date used, contested KB choices made, and anything deferred (e.g. "navigation index deferred — repo under threshold; re-run /harness-update when it grows").
+End with: files generated, per-tool coverage, KB entry used, contested KB choices made, anything deferred (e.g. "navigation index deferred — repo under threshold; re-run /harness-update when it grows"), and an ADVISORY section per `kb/agent-friendly-code.md` naming the highest-leverage repo improvements outside the harness itself (e.g. missing tests, slow checks) — recommendations only, never applied.

@@ -8,7 +8,9 @@
       "Bash(git diff*)"
     ],
     "deny": [
-      "Read(.env*)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(./secrets/**)",
       "Read({{generated_or_vendored_globs}})"
     ]
   },

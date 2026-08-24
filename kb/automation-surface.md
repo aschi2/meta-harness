@@ -38,7 +38,7 @@ What executable/config machinery a generated harness includes. Governing princip
 ## Permissions and sandboxing
 
 - Committed `.claude/settings.json` = team policy; `settings.local.json` (gitignored) = personal. Evaluation: deny > ask > allow, first match wins; deny rules have no exceptions, so allowlists can be generous when deny is the safety net (https://code.claude.com/docs/en/permissions, current).
-- Generate: an allowlist of the repo's verified safe read/build/test commands (test runner, linter, formatter, git status/diff), deny rules for secrets paths (`.env*`, key material) and Read of generated/vendored dirs (also a navigation win, see code-navigation.md). Promote repeatedly-approved commands to allow rules over time — encode that as a maintenance note, not more upfront rules.
+- Generate: an allowlist of the repo's verified safe read/build/test commands (test runner, linter, formatter, git status/diff), deny rules for secrets paths and Read of generated/vendored dirs (also a navigation win, see code-navigation.md). The full secrets/exfiltration checklist, allowlist sharp edges, and CI posture live in security.md — apply it whenever emitting permissions. Promote repeatedly-approved commands to allow rules over time — encode that as a maintenance note, not more upfront rules.
 - Codex: repos can carry `.codex/config.toml`; secure default `sandbox_mode = "workspace-write"` + `approval_policy = "on-request"` (https://developers.openai.com/codex/concepts/sandboxing, current). Verify the current enum values against live docs at generation time — they drift between versions.
 - Never generate permission-bypass settings or auto-approve-everything profiles.
 
