@@ -1,0 +1,38 @@
+<!-- Generator: every line must trace to the repo profile or be deleted.
+     Target 60-150 lines total. Rules: kb/context-files.md. -->
+# {{repo_name}}
+
+{{one_or_two_sentence_what_and_stack}}
+
+## Commands
+
+<!-- Only commands verified runnable during generation. Per-package commands
+     for monorepos go in nested AGENTS.md files, not here. -->
+- Build: `{{build_command}}`
+- Test: `{{test_command}}` (single test: `{{single_test_command}}`)
+- Lint/format: `{{lint_command}}`
+- Typecheck: `{{typecheck_command}}`
+
+## Conventions
+
+<!-- Only rules that differ from language/framework defaults or that a linter
+     does not already enforce. Delete the section if none exist. -->
+{{nondefault_conventions}}
+
+## Gotchas
+
+<!-- Non-obvious traps specific to this repo: env vars, ordering constraints,
+     files that must change together. Delete if none are known yet. -->
+{{gotchas}}
+
+## Docs
+
+<!-- One line per EXISTING doc file: pointer + when to read it. No content
+     copies. Delete the section if the repo has no docs. -->
+{{docs_pointer_index}}
+
+## Definition of done
+
+- Run {{verify_commands}} before declaring any change complete; include the output as evidence.
+- A change that alters behavior described in a doc updates that doc in the same change.
+- When a task teaches something non-obvious about this repo, record it (memory or docs/) before closing out.

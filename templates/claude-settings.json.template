@@ -1,0 +1,40 @@
+{
+  "//": "Generator: fill from verified repo commands; delete hooks whose tooling the repo lacks. Rules: kb/automation-surface.md. Remove this key before writing.",
+  "permissions": {
+    "allow": [
+      "Bash({{test_command}}*)",
+      "Bash({{lint_command}}*)",
+      "Bash(git status*)",
+      "Bash(git diff*)"
+    ],
+    "deny": [
+      "Read(.env*)",
+      "Read({{generated_or_vendored_globs}})"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{format_touched_file_command}}",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{cheap_check_suite_command}} || exit 2",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  }
+}

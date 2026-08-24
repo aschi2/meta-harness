@@ -1,0 +1,14 @@
+{
+  "name": "meta-harness",
+  "description": "Local marketplace for the meta-harness plugin: generate and upgrade AI development harnesses from a curated best-practices knowledge base.",
+  "owner": {
+    "name": "Austin"
+  },
+  "plugins": [
+    {
+      "name": "meta-harness",
+      "source": "./",
+      "description": "Generate and upgrade AI development harnesses from a curated best-practices knowledge base."
+    }
+  ]
+}
