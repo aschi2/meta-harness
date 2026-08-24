@@ -29,6 +29,7 @@ Fresh-context-per-cycle with externalized state beats marathon sessions — ever
 - Worktree-per-agent with PR-per-agent merge is the cross-vendor convergent pattern (Claude Code `/batch` and background agents; Copilot one-branch-one-PR; Cursor cloud agents) (https://code.claude.com/docs/en/agents; /worktrees, current).
 - Agent teams (experimental) do NOT isolate members in worktrees — partition by file ownership; 3–5 teammates, "three focused beat five scattered"; ~7x token cost vs a single session, so single sessions for routine work (https://code.claude.com/docs/en/agent-teams, current).
 - Review funnel: adversarial reviewer scoped to correctness-vs-plan only (open-ended reviewers invent findings; see automation-surface.md).
+- Terminology watch: "graph engineering" (coined on X ~2026-07) names multi-agent orchestration graphs — nodes work, edges route, shared state flows — via frameworks like LangGraph/Google ADK/Microsoft Agent Framework. Its own flagship guide concedes the mechanics predate the name, cites no benchmarks, and says most tasks never need it (https://www.aibuilderclub.com/blog/graph-engineering-guide-2026, 2026-07-20, commercial secondary source). For dev harnesses, the evidence-backed subset is already here: parallelize read-only work, single-thread writes, harness-native orchestration (subagents/teams/workflows) over app frameworks. Revisit if independent evidence appears.
 
 ## Containment (the governing rule)
 

@@ -2,6 +2,10 @@
 
 Newest first — new entries go at the top, with a unique heading (date + short slug). `/harness-update` scopes upgrades to the entries above a manifest's recorded `kbEntry`.
 
+## 2026-08-24 — graph-engineering terminology note
+
+- autonomous-operation: added a terminology-watch note on "graph engineering" (July 2026 X-coined name for multi-agent orchestration graphs; LangGraph/ADK-class frameworks). Assessed on request: no independent evidence, no repo-harness surface; the evidence-backed subset (parallel reads, single-writer, harness-native orchestration) was already covered. No generator behavior changes.
+
 ## 2026-08-24 — archetype playbooks
 
 New `kb/archetypes/` layer (5 parallel agents, primary sources fetched 2026-08-24), loaded by profiled project type; `/harness-new` step 2 updated.
