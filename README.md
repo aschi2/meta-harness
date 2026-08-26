@@ -18,6 +18,14 @@ A "harness" here means everything a repo carries so AI coding agents work well i
 
 Research precedence: verifiable, recent primary sources first; personal conventions only where research is silent or genuinely a matter of preference.
 
+## User overlays
+
+Users can keep private setup routines that layer on a generated harness — wiring a repo into an issue tracker, a billing system, a deploy pipeline. That content stays out of this project: it is user-authored, often carries credentials or client names, and does not generalise.
+
+`/harness-new` looks for them in `${AGENT_OVERLAY_DIR:-~/.config/agent-overlays}`. Each is a markdown file whose frontmatter declares `name`, `description`, a `when` question, and `requires`. Only the frontmatter is read up front; the body runs only if the user answers yes to `when`. Applied overlays are recorded in the manifest by name, and the files they write are deliberately not tracked in `files` or `baseline/` — this plugin does not own them, and `/harness-update` leaves them alone.
+
+No overlay directory means the step is skipped silently. Overlay bodies are user-authored and untrusted by this plugin.
+
 ## Install
 
 ```bash

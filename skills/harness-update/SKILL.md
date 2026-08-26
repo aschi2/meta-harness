@@ -35,6 +35,8 @@ New files the updated KB calls for (that the old KB didn't) are generated as in 
 
 Run the `/harness-new` verify step over everything touched. Rewrite `.harness/manifest.json` with fresh hashes, the new `kbEntry`, and the re-profiled `profile`, and refresh `.harness/baseline/` copies to match the new generated state.
 
+Carry `manifest.overlays` through verbatim. Overlay-written files are outside this plugin's ownership: they are absent from `files` and from the baseline, so they are never classified, merged, or deleted by this procedure. Do not re-run overlays here — `/harness-new` step 5 offers them, an update does not.
+
 ### 5. Report
 
 End with: what changed and which KB changelog entries drove each change, hand-edit conflicts and how each was resolved, files skipped as deleted, and profile-threshold changes (e.g. "repo crossed the navigation-index threshold; index config added").

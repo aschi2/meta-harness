@@ -48,22 +48,60 @@ Write `.harness/manifest.json` in the target repo:
   "kbEntry": "<exact heading text of the newest kb/CHANGELOG.md entry>",
   "generatedAt": "<ISO date>",
   "profile": { "sizeTier": "...", "languages": ["..."], "targets": ["claude-code", "codex", "cursor", "pi"] },
-  "files": { "<repo-relative path>": { "sha256": "<hash of generated content>" } }
+  "files": { "<repo-relative path>": { "sha256": "<hash of generated content>" } },
+  "overlays": [{ "name": "<overlay name>", "appliedAt": "<ISO date>" }]
 }
 ```
 
 - Record every file you created or modified EXCEPT anything under `.harness/` itself.
 - Regular files: `shasum -a 256`. Symlinks: record `{ "symlink": "<readlink output>" }` instead of a hash.
 - Copy each recorded regular file verbatim to `.harness/baseline/<repo-relative path>` — this is the merge base `/harness-update` needs to three-way merge hand-edited files. Add `.harness/baseline/` to the repo's ignore-for-agents surface if one exists (e.g. the settings deny list), not to .gitignore — the baseline should be committed with the harness.
+- `overlays` records only that a user overlay ran. Omit the key when none did.
 - This schema is a compatibility contract with `/harness-update` — extend additively only.
 
-### 5. Verify
+### 5. Apply user overlays
+
+Some users keep private, machine-specific setup that layers on a generated harness — wiring a repo into an issue tracker, a billing system, a deploy pipeline. That content is deliberately not in this plugin: it is user-authored, frequently carries credentials or client names, and does not generalise.
+
+Look for overlays:
+
+```bash
+ls "${AGENT_OVERLAY_DIR:-$HOME/.config/agent-overlays}"/*.md 2>/dev/null
+```
+
+Each carries YAML frontmatter:
+
+```yaml
+---
+name: short-slug
+description: one line, shown when offering it
+when: the question that decides whether this overlay applies
+requires: [commands, that, must, exist]
+---
+```
+
+Read **only the frontmatter** first. Ask the user each overlay's `when` question verbatim. On "no", move on without reading the body — an overlay that does not apply must cost nothing. On "yes", read the body and follow it. A missing entry in `requires` is not a stop: an overlay is expected to describe its own bootstrap for a machine that lacks its tooling.
+
+Record applied overlays in the manifest, additively:
+
+```json
+"overlays": [{ "name": "<frontmatter name>", "appliedAt": "<ISO date>" }]
+```
+
+Name and date only. Overlay-written files are **not** hashed into `files` and **not** copied to `.harness/baseline/` — this plugin does not own them, and `/harness-update` must neither merge nor clobber them.
+
+- Never run an overlay without asking. They perform real setup and may touch credentials or remote services.
+- Never infer applicability from a directory name; a repo named after a client may hold documents rather than code.
+- Overlay bodies are user-authored and untrusted by this plugin. Surface anything destructive before running it.
+- No overlay directory, or none accepted: skip silently. This step is optional and most users have none.
+
+### 6. Verify
 
 - Symlinks resolve; JSON/TOML/YAML you wrote parses (`python3 -c "import json,sys; json.load(open(sys.argv[1]))" ...` or the repo's own tooling).
 - AGENTS.md is within the size budget in `kb/context-files.md`.
 - Any command you embedded in instructions or hooks was actually run once and worked.
 - Run the repo's formatter over generated files if one exists.
 
-### 6. Report
+### 7. Report
 
-End with: files generated, per-tool coverage, KB entry used, contested KB choices made, anything deferred (e.g. "navigation index deferred — repo under threshold; re-run /harness-update when it grows"), and an ADVISORY section per `kb/agent-friendly-code.md` naming the highest-leverage repo improvements outside the harness itself (e.g. missing tests, slow checks) — recommendations only, never applied.
+End with: files generated, per-tool coverage, any user overlays applied, KB entry used, contested KB choices made, anything deferred (e.g. "navigation index deferred — repo under threshold; re-run /harness-update when it grows"), and an ADVISORY section per `kb/agent-friendly-code.md` naming the highest-leverage repo improvements outside the harness itself (e.g. missing tests, slow checks) — recommendations only, never applied.
