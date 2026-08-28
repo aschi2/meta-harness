@@ -1,6 +1,6 @@
 ---
 topic: archetypes/services-infra
-reviewed: 2026-08-24
+reviewed: 2026-08-27
 ---
 
 # Backend services / infrastructure archetype
@@ -29,6 +29,7 @@ Local: always. Staging: via PR + approval. Prod: never directly — read-only ob
 ## API services
 
 - OpenAPI as source of truth with oasdiff `breaking` in CI (it also has an MCP so agents can query the analysis); generated typed clients; SDK-preview builds to see downstream breakage pre-merge (https://github.com/oasdiff/oasdiff, current; https://www.stainless.com/blog/steps-toward-great-agent-experience-every-api-provider-can-take-today, 2026-03-23).
+- For internal API reshapes, migrate all callers to the new shape, then delete the legacy API in the same effort; do not leave compatibility shims for internal-only consumers (https://github.com/cursor/plugins/tree/main/pstack, 2026-08).
 - Local-stack fidelity (docker-compose/LocalStack/testcontainers) as the agent's runnable environment — see runtime-feedback.md for the log/seed side.
 
 ## Kubernetes / deploy

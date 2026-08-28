@@ -1,6 +1,6 @@
 ---
 topic: spec-and-planning
-reviewed: 2026-08-24
+reviewed: 2026-08-27
 ---
 
 # Spec and planning workflows
@@ -11,6 +11,8 @@ How a generated harness supports PRD→spec→plan→implement work, and what `/
 
 - Skip criterion (Anthropic official): "If you could describe the diff in one sentence, skip the plan" — planning pays when the approach is uncertain, multiple files change, or the code is unfamiliar (https://code.claude.com/docs/en/best-practices, current).
 - For larger features: interview → self-contained SPEC.md → execute in a FRESH session with clean context. Spec quality bar: names the files and interfaces involved, states what's out of scope, ends with an end-to-end verification step (https://code.claude.com/docs/en/best-practices, current).
+- When a design decision is genuinely novel with several viable shapes (new architecture, new UX surface), generate 2–3 concrete competing candidates and compare them before committing; skip this for routine changes (https://github.com/cursor/plugins/tree/main/pstack, 2026-08).
+- For deliberate refactors, sketch what the design would be if the new requirement had existed on day one, then use the gap as a guide — not a mandate to rewrite (https://github.com/cursor/plugins/tree/main/pstack, 2026-08).
 - Plan review is the primary human leverage point — "a bad line of a plan could lead to hundreds of bad lines of code"; ~200 lines is the cited practical plan size; compact status back into the plan file after each verified phase (https://github.com/humanlayer/advanced-context-engineering-for-coding-agents/blob/main/ace-fca.md, 2025; self-reported results).
 - Plan-against-diff review: an adversarial reviewer checks the diff against the plan — every requirement implemented, listed edge cases tested, nothing out of scope changed (https://code.claude.com/docs/en/best-practices, current).
 
@@ -26,6 +28,7 @@ How a generated harness supports PRD→spec→plan→implement work, and what `/
 - "Agent-sized" task: fits one focused context window and has an objectively checkable completion signal [heuristic; consistent across Spec Kit/Kiro/ACE-FCA].
 - Parallelize only tasks independent by construction, isolated in worktrees; parallel agents with decision authority over shared state produce conflicting implicit decisions (https://cognition.com/blog/dont-build-multi-agents, 2025-06-12; see automation-surface.md).
 - Contested: markdown plan files vs structured trackers. Plan files are the mainstream carrier (Anthropic, ACE-FCA); Yegge's Beads argues markdown plans rot into unqueryable piles at scale and a git-backed graph tracker should be agent memory (https://steveyegge.spicytakes.org/post/2025-11-12-introducing-beads-a-coding-agent-memory-system, 2025-11-12). Default: plan files; note the tracker option for repos running many concurrent autonomous streams.
+- Contested: whether migrations may pass through planned broken intermediate states. Position 1: every commit is green. Position 2: scoped intermediate breakage is acceptable when the sequence is planned and a final verification gate proves the end state. Default: green per unit for team repos; planned breakage is acceptable on solo short-lived branches (https://github.com/cursor/plugins/tree/main/pstack, 2026-08).
 
 ## What the generator emits
 

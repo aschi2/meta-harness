@@ -1,6 +1,6 @@
 ---
 topic: archetypes/mobile
-reviewed: 2026-08-24
+reviewed: 2026-08-27
 ---
 
 # Mobile archetype (Flutter, iOS, Android, React Native)
@@ -25,6 +25,8 @@ Cheapest tier that answers the question, documented in AGENTS.md:
 4. Human review of user-facing UI.
 
 Baseline discipline: iOS snapshots must be compared on the EXACT simulator that recorded them — name it in AGENTS.md (https://github.com/pointfreeco/swift-snapshot-testing, current); Git LFS for snapshot PNGs (Paparazzi's own recommendation); baseline-refresh commands named, and the agent that wrote the code doesn't solo-approve baseline updates (see testing-strategy.md).
+
+- When core-loop quality or user-visible polish conflicts with implementation convenience, favor the user; implementation cost is rarely the user's problem (https://github.com/cursor/plugins/tree/main/pstack, 2026-08).
 
 ## Build harnessing
 

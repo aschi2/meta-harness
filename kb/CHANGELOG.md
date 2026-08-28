@@ -2,6 +2,16 @@
 
 Newest first — new entries go at the top, with a unique heading (date + short slug). `/harness-update` scopes upgrades to the entries above a manifest's recorded `kbEntry`.
 
+## 2026-08-27 — pstack conditional rules
+
+Adopted conditional rules from pstack.
+
+- team-workflows: independently verifiable commit sequencing for migrations and other large multi-commit reviews.
+- spec-and-planning: competing-candidate comparison for novel design decisions, first-principles refactor checks, and contested guidance on planned broken migration intermediates.
+- archetypes/web-app, archetypes/mobile: user-facing quality takes priority over implementation convenience.
+- archetypes/services-infra: internal API reshapes migrate all callers and remove legacy APIs in the same effort.
+- languages/typescript: type-system discipline for illegal states, branded primitives, exhaustiveness, schema-derived types, and removing casts.
+
 ## 2026-08-24 — graph-engineering terminology note
 
 - autonomous-operation: added a terminology-watch note on "graph engineering" (July 2026 X-coined name for multi-agent orchestration graphs; LangGraph/ADK-class frameworks). Assessed on request: no independent evidence, no repo-harness surface; the evidence-backed subset (parallel reads, single-writer, harness-native orchestration) was already covered. No generator behavior changes.

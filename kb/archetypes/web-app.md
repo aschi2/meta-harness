@@ -1,6 +1,6 @@
 ---
 topic: archetypes/web-app
-reviewed: 2026-08-24
+reviewed: 2026-08-27
 ---
 
 # Web application archetype
@@ -27,6 +27,8 @@ Layered on top of runtime-feedback.md (browser surface, console forwarding, dev-
 ## Design-system conformance
 
 Where a design system exists, emit the Storybook agent wiring (`@storybook/addon-mcp`: component manifests, story generation, `run-story-tests`) plus its guardrail line in AGENTS.md — "never use a component prop without checking the manifest; common-sounding props like `shadow` get hallucinated" (https://storybook.js.org/docs/ai, current — preview status, React-only; version-check before emitting). Figma Dev Mode MCP for design-to-code teams (beta pricing will change). Design-token pipelines are project-specific — the DTCG format is still a non-authoritative draft; don't scaffold token infrastructure.
+
+- When core-loop quality or user-visible polish conflicts with implementation convenience, favor the user; implementation cost is rarely the user's problem (https://github.com/cursor/plugins/tree/main/pstack, 2026-08).
 
 ## Fullstack boundaries (RSC-era mistakes agents make)
 

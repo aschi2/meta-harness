@@ -1,6 +1,6 @@
 ---
 topic: languages/typescript
-reviewed: 2026-08-24
+reviewed: 2026-08-27
 ---
 
 # TypeScript playbook
@@ -10,6 +10,10 @@ reviewed: 2026-08-24
 - **pnpm** default for teams/monorepos — its strict node_modules makes undeclared imports fail, mechanically countering phantom-dependency mistakes (https://pnpm.io/motivation, current); Bun acceptable for greenfield single-package speed. Keep an existing repo's manager.
 - **TypeScript 7** (native Go compiler, GA 2026-07-08) made `tsc --noEmit` ~10x faster — full typecheck is now viable in per-edit loops (https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/, 2026-07-08). Caveat that shapes lint choice: 7.0 has NO programmatic API until 7.1, so type-aware ESLint rules run on the old TS6 checker — which strengthens **Biome v2** (own type inference, no TS compiler dependency, ~35x faster formatting) as the per-edit lint/format default, keeping ESLint only for plugin-dependent rules (a11y, tailwind, custom) (https://biomejs.dev/blog/biome-v2/, 2025-06-17). Existing ESLint+Prettier repos: keep, don't migrate.
 - **tsconfig strictness** (new repos; respect existing config): `strict`, `noUncheckedIndexedAccess`, `noImplicitOverride`, `verbatimModuleSyntax`, `module: "NodeNext"` (tsc-transpiled) or `"preserve"` (bundler) (https://www.totaltypescript.com/tsconfig-cheat-sheet, 2024-04). Compiler strictness is the agent's pass/fail signal; `verbatimModuleSyntax` turns ESM/CJS mistakes into compile errors.
+
+## Type-system discipline
+
+- Make illegal states unrepresentable: use discriminated unions instead of boolean flags; brand primitives that carry meaning (`UserId`, not `string`); keep variants exhaustive with a `switch` and `never` check; derive types from schemas so there is one source of truth; and treat `as` casts as defects to remove, not tools (https://github.com/cursor/plugins/tree/main/pstack, 2026-08).
 
 ## Hooks
 

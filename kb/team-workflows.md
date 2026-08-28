@@ -1,6 +1,6 @@
 ---
 topic: team-workflows
-reviewed: 2026-08-24
+reviewed: 2026-08-27
 ---
 
 # Team workflows and CI for agent-generated code
@@ -17,6 +17,7 @@ What a generated harness encodes for teams: PR conventions, review structure, CI
 ## Review structure
 
 - Human review concentrates on specs/plans, not generated lines — "review the 200-line plan, not the 2,000-line diff" (https://github.com/humanlayer/advanced-context-engineering-for-coding-agents/blob/main/ace-fca.md, 2025; see spec-and-planning.md).
+- For migrations and other large multi-commit changes under human review, sequence work as independently verifiable units: each commit lands with its own passing check, ordered so a reviewer verifies incrementally instead of auditing one large diff (https://github.com/cursor/plugins/tree/main/pstack, 2026-08).
 - AI review of AI code works in production but lives or dies on noise control. Proven countermeasures: explicit "what NOT to flag" instructions, filtering generated/lockfile diffs, severity floors (P0/P1-only), dedup, nit caps after first review (https://blog.cloudflare.com/ai-code-review/, 2026-04-20 — 131k reviews/month, median $0.98; https://developers.openai.com/codex/integrations/github, current; https://code.claude.com/docs/en/code-review, current). Habituation is measured and real: reviewers approve more and comment less on agent PRs over time (https://arxiv.org/abs/2606.22721, 2026-06) — noisy bots train people to ignore them.
 - For teams using a repo-level review tool, emit its tuning file (e.g. REVIEW.md for Claude Code review: severity rules, nit caps, skip rules for generated code) instead of prose review rules; for Codex, nested AGENTS.md `## Code Review Rules` sections (https://code.claude.com/docs/en/code-review, current; https://developers.openai.com/codex/integrations/github, current).
 - Treat review prompts/harness config as maintained software — "prompt rot" is a named production failure mode (https://getdx.com/blog/how-faire-platform-team-built-an-ai-code-review-agent/, 2025-08).
