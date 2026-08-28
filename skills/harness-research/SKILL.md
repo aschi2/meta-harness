@@ -7,7 +7,7 @@ description: Refresh the meta-harness knowledge base with current best practices
 
 Update the knowledge base from live research. The KB is the single source of truth `/harness-new` and `/harness-update` read, so every change must be cited and land as a reviewable diff.
 
-**Work in the meta-harness source repo** (`/Users/austin/codex-projects/meta-harness`), not a plugin cache copy — edits to a cache are lost on reinstall. After the refresh: bump `version` in `.claude-plugin/plugin.json` (updates are version-gated), then run `claude plugin update meta-harness@meta-harness` so the installed copy picks up the new KB.
+**Work in the meta-harness source checkout**, not the installed plugin cache — edits to a cache are lost on reinstall. If the current directory is inside a plugin cache (a path under `~/.claude/plugins/`), ask the user where the source checkout lives before editing. After the refresh: bump `version` in `.claude-plugin/plugin.json` (updates are version-gated), then run `claude plugin update meta-harness@meta-harness` so the installed copy picks up the new KB.
 
 ## Procedure
 

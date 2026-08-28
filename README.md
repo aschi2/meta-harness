@@ -29,9 +29,12 @@ No overlay directory means the step is skipped silently. Overlay bodies are user
 ## Install
 
 ```bash
-claude plugin marketplace add /Users/austin/codex-projects/meta-harness
+git clone https://github.com/aschi2/meta-harness.git
+claude plugin marketplace add ./meta-harness
 claude plugin install meta-harness@meta-harness
 ```
+
+After changing the knowledge base, bump `version` in `.claude-plugin/plugin.json` and run `claude plugin update meta-harness@meta-harness` — updates are version-gated.
 
 ## Manifest
 

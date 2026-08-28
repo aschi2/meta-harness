@@ -1,0 +1,19 @@
+# User overlays are private and machine-specific. They live outside this repo
+# (${AGENT_OVERLAY_DIR:-~/.config/agent-overlays}); these patterns are a backstop
+# in case one is ever copied or symlinked in here.
+agent-overlays/
+overlays/
+*.overlay.md
+
+# Local, non-shared agent config
+.claude/settings.local.json
+
+# Harness output, if this repo is ever a generation target
+.harness/
+
+# Secrets and environment
+.env
+.env.*
+
+# OS noise
+.DS_Store
