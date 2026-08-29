@@ -28,11 +28,17 @@
 ## Docs
 
 <!-- One line per EXISTING doc file: pointer + when to read it. No content
-     copies. Delete the section if the repo has no docs. -->
+     copies. Delete the section if the repo has no docs. If the notes layer was
+     generated, it belongs here with its read-it-when condition — it is never
+     loaded by default. -->
 {{docs_pointer_index}}
 
 ## Definition of done
 
 - Run {{verify_commands}} before declaring any change complete; include the output as evidence.
 - A change that alters behavior described in a doc updates that doc in the same change.
+<!-- If the notes layer was generated, use the first line and delete the second.
+     If it was not, delete the first — never emit a pointer to a file that
+     does not exist. Rules: kb/memory-and-docs.md. -->
+- When a task teaches something non-obvious about this repo, append it to {{agent_notes_path}} before closing out — symptom, root cause, fix, and the file it lives in. Don't paste it into this file; entries are promoted here by {{consolidate_command}}, once a pattern has cost something twice.
 - When a task teaches something non-obvious about this repo, record it (memory or docs/) before closing out.

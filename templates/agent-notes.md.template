@@ -1,0 +1,40 @@
+<!-- Generator: emit this file ONLY for repos that will run sustained agent work
+     (see kb/memory-and-docs.md, "Consolidated experience"). Seed it with the
+     real gotchas found during profiling, or with an empty index and no entries.
+     Never invent entries. Rules: kb/memory-and-docs.md. -->
+# Agent notes — {{repo_name}}
+
+Consolidated learnings from working in this repo. **Not loaded every session.**
+Read it when starting on an unfamiliar area, when something behaves
+surprisingly, or before promoting an entry into {{instruction_file}}.
+
+Raw material (session transcripts, CI output, git history) is not copied here —
+only what survived being understood. One entry per pattern.
+
+Appending during a task is half the loop. The other half is `{{consolidate_command}}`:
+merge duplicate entries, re-verify each entry's cited code location against
+current code, mark what no longer holds as superseded, and propose promotions
+into {{instruction_file}}. Without that pass this file rots into an append-only
+pile that agents trust anyway. Promotions are proposed for a human to accept.
+
+## Index
+
+<!-- One line per entry: what it is, so a reader can decide whether to open it. -->
+{{entry_index}}
+
+---
+
+<!-- Entry format. Keep entries short; a long entry is usually two entries.
+     Never delete an entry because the code changed - mark it superseded and
+     say what replaced it, so the same wrong turn isn't retaken. -->
+
+## {{entry_title}}
+
+- **Date:** {{absolute_date}}
+- **Symptom:** what was observed, concretely enough to recognize again.
+- **Root cause:** why it happened, not just where.
+- **Fix / workaround:** what actually worked.
+- **Where:** `path/to/file.ext:line` (name the function/symbol too — line numbers
+  drift, and a surviving line number can point at unrelated code). Re-check that
+  the claim still holds before trusting it, not just that the path resolves.
+- **Promoted:** {{promoted_to}} <!-- e.g. "AGENTS.md Gotchas, 2026-08-29", "proposed", or "no - too narrow" -->

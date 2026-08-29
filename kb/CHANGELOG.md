@@ -2,6 +2,15 @@
 
 Newest first — new entries go at the top, with a unique heading (date + short slug). `/harness-update` scopes upgrades to the entries above a manifest's recorded `kbEntry`.
 
+## 2026-08-29 — WikiSkill: traces vs consolidated knowledge vs skills
+
+Adopted the trace/knowledge/instruction separation from WikiSkill (https://arxiv.org/abs/2608.27454, 2026-08-27) as a new generated artifact. **This changes generator output**: repos doing sustained agent work now get a notes layer. The paper's automatic validation-gated loop is NOT adopted — its benchmarks are math/search/spreadsheet/document-QA/ALFWorld with no repository work, its wiki ablation removes the maintainer agent along with the artifact so it isolates neither, and repos lack the scored validation split the gate needs.
+
+- memory-and-docs: NEW section "Consolidated experience (the notes layer)" — a single `docs/agent-notes.md`, **opt-in only** (asked for, or already present to adopt; never inferred from repo size or activity), read on condition rather than every session, append-mostly with superseded entries marked rather than deleted, and promotion into AGENTS.md/skills proposed for a human to accept, recording the motivating entry. Emitted only together with its consolidation procedure — without that pass it is the multi-file memory bank this KB bans under one filename, so the ban is narrowed rather than dropped.
+- automation-surface: `consolidate-notes` ships with the notes layer and is not optional there (merge duplicates, re-verify cited code, mark superseded, propose promotions); explicit do-not-generate for the automatic validation-gated loop, with an independent counterweight on gate noise (https://arxiv.org/abs/2608.02636, 2026-07-31). Also added that portable skill format is not portable performance — cross-model transfer helps but in one case dropped a strong model from 50.5% to 18.1%.
+- templates: NEW `agent-notes.md.template`; AGENTS.md template's definition-of-done now names the notes file instead of a vague "memory or docs/".
+- skills/harness-new: step 3 emits the notes layer where conditions are met.
+
 ## 2026-08-27 — pstack conditional rules
 
 Adopted conditional rules from pstack.

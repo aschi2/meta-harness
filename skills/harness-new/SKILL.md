@@ -34,7 +34,7 @@ Read every top-level topic file in `${CLAUDE_PLUGIN_ROOT}/kb/` (skip CHANGELOG.m
 State a short plan (files to create, per-tool outputs) before writing. Then generate, using `${CLAUDE_PLUGIN_ROOT}/templates/` as starting points. Placeholder rule: every `{{placeholder}}` is either filled from the repo profile (commands verified runnable) or its line/section is deleted — a repo with no test suite gets no test line, not an invented one. Delete whole template sections the KB says this repo doesn't need. Typical composition (final say belongs to the KB):
 
 - Canonical `AGENTS.md` + per-tool discovery files per `kb/harness-targets.md` (symlinks/pointers, per-directory files where the KB's size rules call for them).
-- Docs/memory system per `kb/memory-and-docs.md`.
+- Docs/memory system per `kb/memory-and-docs.md`. The notes layer (`docs/agent-notes.md`) is opt-in — generate it only if the user asks or the repo already has one to adopt, and then always as a set: file, AGENTS.md "read it when" pointer, capture line naming it, and the `consolidate-notes` skill. Never inline it into AGENTS.md.
 - Code navigation setup per `kb/code-navigation.md` for the measured size tier.
 - Skills/commands/hooks/permissions per `kb/automation-surface.md` — only ones this repo's profile justifies; every hook command must be verified runnable before it's checked in.
 

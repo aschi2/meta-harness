@@ -1,6 +1,6 @@
 ---
 topic: automation-surface
-reviewed: 2026-08-24
+reviewed: 2026-08-29
 ---
 
 # Automation surface: skills, hooks, subagents, permissions, verification
@@ -16,6 +16,9 @@ What executable/config machinery a generated harness includes. Governing princip
 - Scripts for deterministic operations, prose for judgment; add scripts only where they improve reliability (https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills, 2025-10-16).
 - Caution: skills can fail to trigger — for always-needed knowledge prefer the AGENTS.md pointer index (see context-files.md, Vercel eval).
 - Generate few skills. Candidates that earn a skill in most repos: a "run/launch the app" recipe, a deploy/release procedure, a domain workflow with 3+ non-obvious steps. Everything else starts as an AGENTS.md line [heuristic].
+- Portable format does not mean portable performance. Skills carry across model families and can beat a model's own self-authored ones, but transfer also fails hard: skills evolved on a 4B model dropped a much stronger model from 50.5% to 18.1% on one benchmark, by encoding low-level workarounds and fragmented diagnostics the stronger model did not need (https://arxiv.org/abs/2608.27454, 2026-08-27). One case, one benchmark pair — not grounds for a re-check mandate, but enough that a skill inherited from a weaker model or a marketplace is not automatically free.
+- Where the notes layer is generated (see memory-and-docs.md), its consolidation procedure ships with it — a `consolidate-notes` skill: read recent entries, merge duplicates, re-verify cited code locations, mark superseded entries, and propose (not apply) promotions into AGENTS.md or a skill, naming the entry behind each. This is the step that keeps a notes file from decaying into an append-only memory bank, so it is not optional there; without the notes layer, don't generate it. A pattern is promotion-worthy once it has cost something twice — the same second-occurrence rule memory entries use [heuristic].
+- Do not generate the *automatic* form of that loop — rollouts scored against a validation split with edits accepted on a numeric gain [heuristic]. Published loops do beat no-skill baselines, so this is a scope judgment rather than a refutation: they inject the full skill set into the prompt and explicitly do not evaluate retrieval or triggering, which this KB already flags as where skills fail in practice (https://arxiv.org/abs/2608.27454, 2026-08-27); none evaluates repository work; and the gate is noisy — across 14 settings it selected an evolved skill in 11, of which 9 improved test performance (https://arxiv.org/abs/2608.02636, 2026-07-31). Most repos have no scored validation split to gate on at all.
 
 ## Hooks
 
