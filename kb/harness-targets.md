@@ -1,11 +1,11 @@
 ---
 topic: harness-targets
-reviewed: 2026-08-24
+reviewed: 2026-08-29
 ---
 
 # Harness targets: per-tool emission rules
 
-What files the generator emits per targeted tool. Default target set: Claude Code, Codex, Cursor, pi. All claims verified against official docs 2026-08-24; tool config surfaces drift fast, so `/harness-research` re-verifies this file before other topics.
+What files the generator emits per targeted tool. Default target set: Claude Code, Codex, Cursor, pi. Full-file verification against official docs 2026-08-24, with the Codex skills bullet re-verified 2026-08-29; tool config surfaces drift fast, so `/harness-research` re-verifies this file before other topics.
 
 ## Instructions: one canonical AGENTS.md
 
@@ -19,7 +19,7 @@ What files the generator emits per targeted tool. Default target set: Claude Cod
 ## Skills: shared directory + symlink shim
 
 - Agent Skills standard (https://agentskills.io/specification, current) is supported by all four targets.
-- **Cross-tool repos**: skills live in `.agents/skills/<name>/SKILL.md` — read natively by Codex, Cursor, and pi. Claude Code reads only `.claude/skills/` but supports symlinked skill dirs: emit `.claude/skills/<name>` → `../../.agents/skills/<name>` symlinks (https://code.claude.com/docs/en/skills, current). Use ONLY portable frontmatter (`name`, `description`, `license`, `compatibility`, `metadata`, `allowed-tools`).
+- **Cross-tool repos**: skills live in `.agents/skills/<name>/SKILL.md` — read natively by Codex, Cursor, and pi. Codex scans `.agents/skills` in every directory from the cwd up to the repo root, plus `$HOME/.agents/skills` for user scope (https://learn.chatgpt.com/docs/build-skills, 2026-08-29); confirmed empirically the same day on codex-cli 0.150.1, where a skill under a repo's `.agents/skills/` was enumerated by `codex exec` from that repo and absent from outside it. Cursor and pi remain doc-sourced and unverified here. Claude Code reads only `.claude/skills/` but supports symlinked skill dirs: emit `.claude/skills/<name>` → `../../.agents/skills/<name>` symlinks (https://code.claude.com/docs/en/skills, current). Use ONLY portable frontmatter (`name`, `description`, `license`, `compatibility`, `metadata`, `allowed-tools`).
 - **Claude-only repos**: `.claude/skills/` directly; Claude-specific frontmatter (`disable-model-invocation`, `paths`, `context`, hooks) allowed.
 
 ## Settings and per-tool config

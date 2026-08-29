@@ -2,6 +2,10 @@
 
 Newest first — new entries go at the top, with a unique heading (date + short slug). `/harness-update` scopes upgrades to the entries above a manifest's recorded `kbEntry`.
 
+## 2026-08-29 — Codex skill discovery is per-repo
+
+- harness-targets: recorded that Codex scans `.agents/skills` from the cwd up to the repo root, plus `$HOME/.agents/skills` for user scope (https://learn.chatgpt.com/docs/build-skills, 2026-08-29), confirmed on codex-cli 0.150.1 by a probe skill that was enumerated inside the repo holding it and absent outside. No generator behavior changes: `.agents/skills/` was already the emitted cross-tool location, and the note only removes the assumption that Codex needs a machine-wide install to see it.
+
 ## 2026-08-29 — WikiSkill: traces vs consolidated knowledge vs skills
 
 Adopted the trace/knowledge/instruction separation from WikiSkill (https://arxiv.org/abs/2608.27454, 2026-08-27) as a new generated artifact. **This changes generator output**: repos doing sustained agent work now get a notes layer. The paper's automatic validation-gated loop is NOT adopted — its benchmarks are math/search/spreadsheet/document-QA/ALFWorld with no repository work, its wiki ablation removes the maintainer agent along with the artifact so it isolates neither, and repos lack the scored validation split the gate needs.
