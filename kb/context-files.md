@@ -1,6 +1,6 @@
 ---
 topic: context-files
-reviewed: 2026-08-24
+reviewed: 2026-08-28
 ---
 
 # Context files (AGENTS.md / CLAUDE.md / rules)
@@ -16,6 +16,7 @@ Only non-inferable content — things an agent cannot derive by reading the code
 - Repo etiquette: branch naming, PR conventions, commit rules.
 - Architectural decisions and non-obvious gotchas specific to this project.
 - Required env vars and environment quirks.
+- Environment facts stated literally — language and toolchain versions, package managers, entry directories — rather than left for the agent to discover. Precomputing these into the first prompt removed the 2–4 exploratory turns agents spend probing the environment and measured +1.7 pts (Opus 4.6) and +3.9 pts (Haiku 4.5) on TerminalBench-2 (https://arxiv.org/abs/2603.28052, 2026-03-30). Calibration: gains came from only 7 of 89 tasks, with search and eval on the same task set and no error bars, so treat the direction as sound and the magnitude as an upper bound. The cheap, additive form is what to emit; a SessionStart probe hook is the alternative when versions drift.
 - WHAT/WHY/HOW frame: tech stack, purpose of components, dev workflow and verification commands (https://www.humanlayer.dev/blog/writing-a-good-claude-md, 2025-11-25).
 
 ## What stays out
@@ -25,6 +26,7 @@ Only non-inferable content — things an agent cannot derive by reading the code
 - Standard language conventions, generic API docs (link instead), fast-changing information, tutorials, "write clean code"-grade platitudes (https://code.claude.com/docs/en/best-practices).
 - Stray tool mentions: tools named in AGENTS.md get used far more often than unmentioned ones, so every mention is a lever — remove ones you don't mean (https://www.philschmid.de/writing-good-agents, 2026-02-24) [single-source figure; direction is well supported, magnitude unverified].
 - Task-specific/hotfix instructions that don't apply to every session (HumanLayer, 2025-11-25).
+- Housekeeping and "clean up after yourself" directives: one trace diagnosis attributed a regression to exactly this — "Prompt template changes (cleanup directives) caused the agent to delete necessary state before task completion" (https://arxiv.org/abs/2603.28052, 2026-03-30) [trace-level, n=1]. If cleanup matters, gate it on a check rather than instructing it.
 
 ## Size and format
 

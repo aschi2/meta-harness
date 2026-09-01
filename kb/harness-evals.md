@@ -1,6 +1,6 @@
 ---
 topic: harness-evals
-reviewed: 2026-08-24
+reviewed: 2026-08-28
 ---
 
 # Measuring harness effectiveness
@@ -29,6 +29,11 @@ Trigger rate and output quality are separate axes — measure both. Baseline tri
 ## Adoption reality (calibrates generator defaults)
 
 In a 2,853-repo mining study, context files dominate real harness config (61–100% per tool) while skills, subagents, and hooks all sit under 20% adoption — hooks ~3% (https://arxiv.org/pdf/2602.14690, AIware 2026). The generator's conservative defaults (few skills, starter hooks only, one subagent at most) match observed practice; the KB's job is making the rarely-adopted pieces cheap enough to be worth it.
+
+## Feeding failures back
+
+- When iterating on a harness from failed runs, give the RAW traces, not a summary of them. In an ablation on harness improvement, scores-only scored 34.6 median / 41.3 best, scores plus LLM-generated summaries 34.9 / 38.7 (i.e. summarising bought nothing over scores alone), and full trace access 50.0 / 56.7 (https://arxiv.org/abs/2603.28052, 2026-03-30). Compressing agent logs before analysis discards the signal.
+- Change one thing at a time. In the same work, early iterations that bundled structural and prompt edits both regressed and were followed by six consecutive regressions; the eventual win was "purely additive" (same source) [trace-level]. This is the same reason `/harness-update` merges additively rather than rewriting.
 
 ## Rules for meta-harness itself
 

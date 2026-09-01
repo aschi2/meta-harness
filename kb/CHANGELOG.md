@@ -2,6 +2,21 @@
 
 Newest first — new entries go at the top, with a unique heading (date + short slug). `/harness-update` scopes upgrades to the entries above a manifest's recorded `kbEntry`.
 
+## 2026-08-28 — path portability + Meta-Harness paper
+
+- automation-surface: NEW section on path portability in emitted config. Generated config gets copied to other machines and a machine-absolute path silently disables whatever references it. Verified 2026-08-28: Claude Code hook `command` strings expand `"$HOME"` (shell), Claude Code marketplace `source.path` expands `~`, and Codex `writable_roots` expands `~` but NOT environment variables (`$HOME/...` is treated literally and denied). Non-existent `writable_roots` are ignored, so one list can cover macOS and Linux.
+- context-files: state environment facts (toolchain versions, package managers, entry dirs) literally instead of leaving them to be discovered — measured +1.7 / +3.9 pts on TerminalBench-2, with the magnitude flagged as an upper bound (search and eval on the same tasks, gains on 7 of 89, no error bars). Added a caution against housekeeping/"clean up after yourself" directives.
+- harness-evals: NEW section — feed raw traces rather than summaries when iterating on a harness (summaries bought nothing over scores alone; full traces scored far higher), and change one thing at a time.
+- automation-surface: stop-gate livelock failure mode — a completion gate that re-presents a checklist after the completion signal can loop forever.
+- All from https://arxiv.org/abs/2603.28052 (2026-03-30), an unrefereed preprint about automated harness *search*; only its coding-agent findings were adopted, each marked with its evidence strength.
+
+## 2026-08-30 — JIT harness assessed; SkillsBench evidence on curated vs agent-authored skills
+
+Assessed JIT-Agent on request; the search that surfaced it also turned up SkillsBench. No generator behavior changes. Note the scope of what gained evidence: SkillsBench backs *curation and focus* of skills, not the "generate few skills" count rule, which stays a heuristic — it tests neither how many distinct skills a repo should carry nor repository-scale triggering.
+
+- automation-surface: SkillsBench (https://arxiv.org/abs/2602.12670, 2026-06-14) added to the Skills section — curated skills +16.6pp macro (positive in all 18 configurations), agent-authored skills *below* the no-skill baseline on all three configurations tested (−8.1 to −11.5pp), and a ~2M-skill ecosystem quality mean of 6.2/12 versus 10.1/12 curated. Unlike the skill-evolution papers cited above it includes a software-engineering domain (16 of 87 tasks), so it transfers further than they do.
+- automation-surface: NEW scope note naming this KB's output as ahead-of-time harness construction, recording JIT-Agent's runtime-synthesis alternative and its fair critique of AOT, plus the reasons not to act on its numbers — no software-engineering benchmark, no ablation of any module or training stage, no seeds or variance on the main tables, no separate accounting for harness-synthesis cost (https://arxiv.org/abs/2608.25593, 2026-08-26). The paper's own future work favors a stable core with selectively dynamic components. An unrelated prior work in its Table 1 is confusingly named "Meta-Harness".
+
 ## 2026-08-29 — Codex skill discovery is per-repo
 
 - harness-targets: recorded that Codex scans `.agents/skills` from the cwd up to the repo root, plus `$HOME/.agents/skills` for user scope (https://learn.chatgpt.com/docs/build-skills, 2026-08-29), confirmed on codex-cli 0.150.1 by a probe skill that was enumerated inside the repo holding it and absent outside. No generator behavior changes: `.agents/skills/` was already the emitted cross-tool location, and the note only removes the assumption that Codex needs a machine-wide install to see it.

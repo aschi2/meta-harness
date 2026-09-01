@@ -1,6 +1,6 @@
 ---
 topic: automation-surface
-reviewed: 2026-08-29
+reviewed: 2026-08-30
 ---
 
 # Automation surface: skills, hooks, subagents, permissions, verification
@@ -16,7 +16,8 @@ What executable/config machinery a generated harness includes. Governing princip
 - Scripts for deterministic operations, prose for judgment; add scripts only where they improve reliability (https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills, 2025-10-16).
 - Caution: skills can fail to trigger — for always-needed knowledge prefer the AGENTS.md pointer index (see context-files.md, Vercel eval).
 - Generate few skills. Candidates that earn a skill in most repos: a "run/launch the app" recipe, a deploy/release procedure, a domain workflow with 3+ non-obvious steps. Everything else starts as an AGENTS.md line [heuristic].
-- Portable format does not mean portable performance. Skills carry across model families and can beat a model's own self-authored ones, but transfer also fails hard: skills evolved on a 4B model dropped a much stronger model from 50.5% to 18.1% on one benchmark, by encoding low-level workarounds and fragmented diagnostics the stronger model did not need (https://arxiv.org/abs/2608.27454, 2026-08-27). One case, one benchmark pair — not grounds for a re-check mandate, but enough that a skill inherited from a weaker model or a marketplace is not automatically free.
+- **Curated skills pay, and unreviewed agent-authored ones can cost.** On SkillsBench (87 tasks, 8 domains including 16 software-engineering tasks, deterministic programmatic verifiers, 3 trials at temperature 0, 18 model×harness configurations), human-curated skills lifted macro pass rate 33.9% → 50.5% (+16.6pp, positive in every configuration, range +4.1 to +25.7pp) — though even curated skills hurt 13 of the 87 individual tasks. Letting the agent author its own skills instead landed *below* the no-skill baseline on all three configurations tested: −8.1pp (Claude Code + Opus 4.7), −11.3pp (Codex + GPT-5.5), −11.5pp (Gemini CLI + Gemini 3.1 Pro), against +18.2/+19.7/+24.8pp for curated skills on those same setups (https://arxiv.org/abs/2602.12670, 2026-06-14). Read this as support for review-before-adoption, not as a clean measurement of authorship quality: the authors state the self-generated deficit mixes content quality with skill-discovery and creator/solver interference, and that skill injection lengthens context, so part of the curated gain may be added context rather than procedural structure.
+- Portable format does not mean portable performance. Skills carry across model families and can beat a model's own self-authored ones, but transfer also fails hard: skills evolved on a 4B model dropped a much stronger model from 50.5% to 18.1% on one benchmark, by encoding low-level workarounds and fragmented diagnostics the stronger model did not need (https://arxiv.org/abs/2608.27454, 2026-08-27). Inherited and marketplace skills are not free either — mean quality across a ~2M-skill ecosystem snapshot was 6.2/12 (SD 2.8) on a completeness/clarity/specificity/examples rubric, against 10.1/12 for a curated set (https://arxiv.org/abs/2602.12670, 2026-06-14). Read one before adopting it.
 - Where the notes layer is generated (see memory-and-docs.md), its consolidation procedure ships with it — a `consolidate-notes` skill: read recent entries, merge duplicates, re-verify cited code locations, mark superseded entries, and propose (not apply) promotions into AGENTS.md or a skill, naming the entry behind each. This is the step that keeps a notes file from decaying into an append-only memory bank, so it is not optional there; without the notes layer, don't generate it. A pattern is promotion-worthy once it has cost something twice — the same second-occurrence rule memory entries use [heuristic].
 - Do not generate the *automatic* form of that loop — rollouts scored against a validation split with edits accepted on a numeric gain [heuristic]. Published loops do beat no-skill baselines, so this is a scope judgment rather than a refutation: they inject the full skill set into the prompt and explicitly do not evaluate retrieval or triggering, which this KB already flags as where skills fail in practice (https://arxiv.org/abs/2608.27454, 2026-08-27); none evaluates repository work; and the gate is noisy — across 14 settings it selected an evolved skill in 11, of which 9 improved test performance (https://arxiv.org/abs/2608.02636, 2026-07-31). Most repos have no scored validation split to gate on at all.
 
@@ -29,6 +30,20 @@ What executable/config machinery a generated harness includes. Governing princip
   3. Stop gate: run the cheap check suite (typecheck/lint/fast tests) on Stop, exit 2 blocks the turn ending until it passes (auto-overridden after 8 consecutive blocks) (https://code.claude.com/docs/en/best-practices, current).
 - Mechanics the generator must get right: exit code 2 blocks, exit 1 does NOT; narrow matchers + `if:` conditions so hooks don't spawn processes on every tool call; explicit timeouts; `async: true` for expensive non-blocking post-hooks (https://code.claude.com/docs/en/hooks, current).
 - Hooks execute arbitrary code — keep generated hooks short, readable, dependency-free shell; anything complex becomes a checked-in script the hook calls [preference].
+- Stop-gate livelock: a completion gate that re-presents a checklist after the agent signals completion can loop forever (observed in agent traces: "Agent calls task_complete → sees QA checklist...infinite loop") (https://arxiv.org/abs/2603.28052, 2026-03-30) [trace-level, n=1]. A gate must be a pass/fail check, not a re-prompt.
+
+## Path portability in emitted config
+
+Generated config is copied to other machines — a Linux VM, a container, a teammate's laptop. A machine-absolute path silently disables whatever references it. Rules for anything the generator writes:
+
+- Never emit a machine-absolute path (`/Users/...`, `/home/<name>/...`, `/opt/homebrew/...`). Use `~` or `$HOME`, or a repo-relative path.
+- Know which fields expand what, because it differs per tool and per field (all verified 2026-08-28 on codex-cli 0.147.0 / current Claude Code):
+  - Claude Code hook `command` strings run through a shell, so `"$HOME"` expands — quote it: `sh -c 'bash "$HOME"/.claude/hooks/x.sh'`.
+  - Claude Code marketplace `source.path` expands `~`.
+  - Codex `writable_roots` expands `~` but NOT environment variables — `$HOME/.dart-tool` is silently treated as a literal and the write is denied.
+- Where a toolchain lives at different paths per OS, list every candidate: non-existent `writable_roots` entries are ignored rather than erroring (verified same day), so one list can cover macOS and Linux.
+- Machine-specific paths that genuinely cannot be generalised (an SDK location) get a comment naming the command that derives the right value on another machine.
+
 - Hooks are Claude Code-specific (Codex's hooks feature is immature as of 2026) — for cross-tool repos, duplicate must-happen behaviors as CI checks so other tools' output is still gated (see Verification).
 
 ## Subagents
@@ -55,3 +70,9 @@ What executable/config machinery a generated harness includes. Governing princip
 
 - Harness pieces live in the repo (`.claude/`, `.agents/`, AGENTS.md) — versioned with the code they describe. Convert to a plugin only when sharing across repos/teams (official decision rule, https://code.claude.com/docs/en/plugins, current).
 - Prefer CLI tools and skills over MCP servers for context cost; MCP only for live external services (https://code.claude.com/docs/en/best-practices, current; tool-definition overhead evidence: https://www.anthropic.com/engineering/code-execution-with-mcp, 2025-11).
+
+## Scope note: ahead-of-time vs runtime-synthesized harnesses
+
+Everything this KB generates is ahead-of-time (AOT): files written once and read by whatever agent shows up later. A research line argues the opposite — synthesize the harness per task at inference time. JIT-Agent trains a 27B model emitting an executable harness (memory, planning, action, capability-orchestration modules) that wraps a frozen backbone, reporting wins over fixed harnesses including Claude Code and Codex in 4 of 6 controlled backbone×benchmark cells, at 14.9–54.1% lower per-case API cost than the cheapest fixed harness in each cell (https://arxiv.org/abs/2608.25593, 2026-08-26). Its critique of the AOT assumption is fair and worth keeping in view: AOT "asks the optimization loop to precompile a broadly useful harness before seeing the exact structure of each future problem" (https://arxiv.org/abs/2608.25593, 2026-08-26).
+
+Default: stay AOT — and the paper's own future work lands in the same place, expecting production runtimes to "retain a stable core while allowing the model to construct, revise, or replace selected harness components when the task demands it" (https://arxiv.org/abs/2608.25593, 2026-08-26). Reasons to note this rather than act on it: no software-engineering or repository benchmark appears anywhere in it, there is no ablation isolating any module or training stage, no seeds or variance accompany the main tables, and the cost of synthesizing the harness is never accounted separately from running it (https://arxiv.org/abs/2608.25593, 2026-08-26). Its abstract's "GLM-5.2 gains up to +20.2" is a same-backbone gain on one planning benchmark, not a margin over GPT-5.6. An unrelated prior work in its Table 1 is confusingly named "Meta-Harness" and is not this plugin.
