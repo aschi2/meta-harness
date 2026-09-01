@@ -1,7 +1,7 @@
 {
   "name": "meta-harness",
   "description": "Generates and upgrades AI development harnesses (AGENTS.md, memory/docs systems, code navigation, skills/hooks) for any repo or PRD, from a curated, refreshable best-practices knowledge base.",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "author": {
     "name": "Austin"
   }

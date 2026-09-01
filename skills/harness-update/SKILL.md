@@ -31,6 +31,12 @@ For every path in `manifest.files`, compare disk state to the manifest (regular 
 
 New files the updated KB calls for (that the old KB didn't) are generated as in `/harness-new`.
 
+### 3b. Regenerate machine-local files
+
+For every entry in `manifest.machineLocal`: re-run its `rediscover` command on THIS machine and rewrite the file from the result. Do not three-way merge it and do not carry its previous values forward — the recorded values were correct for whichever machine generated them, and stale absolute paths fail silently rather than loudly. If a rediscover command no longer resolves (the toolchain moved or is absent), say so in the report and leave the file untouched rather than writing a guess.
+
+A machine-local file that is missing entirely is the normal state on a fresh clone, not a deletion to respect: generate it.
+
 ### 4. Verify and re-manifest
 
 Run the `/harness-new` verify step over everything touched. Rewrite `.harness/manifest.json` with fresh hashes, the new `kbEntry`, and the re-profiled `profile`, and refresh `.harness/baseline/` copies to match the new generated state.

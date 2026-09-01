@@ -42,7 +42,9 @@ Generated config is copied to other machines — a Linux VM, a container, a team
   - Claude Code marketplace `source.path` expands `~`.
   - Codex `writable_roots` expands `~` but NOT environment variables — `$HOME/.dart-tool` is silently treated as a literal and the write is denied.
 - Where a toolchain lives at different paths per OS, list every candidate: non-existent `writable_roots` entries are ignored rather than erroring (verified same day), so one list can cover macOS and Linux.
-- Machine-specific paths that genuinely cannot be generalised (an SDK location) get a comment naming the command that derives the right value on another machine.
+- Discover, never inherit. Derive a path on the machine you are generating on (`flutter --version --machine`, `go env GOROOT`, `npm config get cache`, `which <tool>`) and write the confirmed value. Copying a path from another repo's harness, or listing plausible candidates, produces config that is right by luck.
+- When a generated file's correctness depends on machine-absolute paths and the tool offers no local-override layer, the file itself is machine-local: gitignore it, keep it out of the committed harness, and record it in the manifest's `machineLocal` with the command that re-derives it, so an update regenerates it on each machine instead of merging one machine's paths into another's. Split portable policy (sandbox mode, approval policy, network) from machine-specific values (`writable_roots`) wherever the format allows both to live apart.
+- Codex specifically has no local-override file: `~/.codex/config.toml` and a project's `.codex/config.toml` merge, `[projects."<path>"]` carries only `trust_level` (not sandbox settings), and no value expands environment variables (https://learn.chatgpt.com/docs/config-file/config-reference, 2026-08-28). A Codex project config that needs absolute paths is therefore machine-local by construction.
 
 - Hooks are Claude Code-specific (Codex's hooks feature is immature as of 2026) — for cross-tool repos, duplicate must-happen behaviors as CI checks so other tools' output is still gated (see Verification).
 

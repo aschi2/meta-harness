@@ -2,6 +2,15 @@
 
 Newest first — new entries go at the top, with a unique heading (date + short slug). `/harness-update` scopes upgrades to the entries above a manifest's recorded `kbEntry`.
 
+## 2026-08-28 — discovered paths and machine-local config
+
+**Changes generator output and extends the manifest schema.** Generated harnesses previously inherited whatever absolute paths the generating machine had, so a harness that worked on macOS silently half-failed on a Linux VM.
+
+- skills/harness-new: profiling now DISCOVERS toolchain paths on the current machine with a recorded command (`flutter --version --machine`, `go env GOROOT`, `npm config get cache`, `which`), and a path not derived on this machine may not go into generated config. Candidate lists and copied paths are out.
+- skills/harness-new: manifest gains `machineLocal` (additive) — files whose correctness depends on machine-absolute paths are gitignored, excluded from `files` and `baseline/`, and recorded with the command that re-derives them.
+- skills/harness-update: NEW step 3b regenerates machine-local files by re-running discovery instead of three-way merging them; a missing one on a fresh clone is generated, not treated as a deletion.
+- automation-surface: portability section gained the discover-don't-inherit rule, the machine-local split (portable policy committed, absolute values local), and the Codex specifics that force it — no local-override file, `[projects."<path>"]` carries only `trust_level`, no env-var expansion (https://learn.chatgpt.com/docs/config-file/config-reference, 2026-08-28).
+
 ## 2026-08-28 — path portability + Meta-Harness paper
 
 - automation-surface: NEW section on path portability in emitted config. Generated config gets copied to other machines and a machine-absolute path silently disables whatever references it. Verified 2026-08-28: Claude Code hook `command` strings expand `"$HOME"` (shell), Claude Code marketplace `source.path` expands `~`, and Codex `writable_roots` expands `~` but NOT environment variables (`$HOME/...` is treated literally and denied). Non-existent `writable_roots` are ignored, so one list can cover macOS and Linux.

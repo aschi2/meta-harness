@@ -23,6 +23,7 @@ Build a repo profile before reading the KB, so KB guidance can be applied condit
 - Size tier: source-file count and LOC — `git ls-files` in a git repo, `find` otherwise, in both cases excluding vendored/generated directories even if tracked; `tokei`/`cloc` if available for LOC. Apply the tier rules (including the structure-beats-count precedence) from `kb/code-navigation.md`.
 - Existing tooling: formatter, linter, typechecker, test runner, CI — with the exact commands (read package.json/Makefile/justfile/CI config; verify commands actually run).
 - Existing harness material: AGENTS.md, CLAUDE.md, .cursor/, .claude/, .codex/, .github/copilot-instructions.md, docs/. Never overwrite any of it blind — read it, fold the still-true content into the new harness, and report what you dropped and why.
+- Toolchain paths, DISCOVERED on this machine, never assumed or copied from another repo's harness: where the SDK/runtime actually lives and which caches its tooling writes outside the repo. Derive each with a command (`flutter --version --machine`, `go env GOROOT GOMODCACHE`, `npm config get cache`, `python -c 'import sys;print(sys.prefix)'`, or `which <tool>` as a fallback) and record both the value AND the command that produced it. A path you did not just derive on this machine does not go into generated config.
 - For PRD mode: extract product domain, planned stack, and explicit constraints, then follow the PRD-mode sequencing and stack guidance in `kb/spec-and-planning.md` and `kb/agent-friendly-code.md`.
 
 ### 2. Read the KB
@@ -36,6 +37,7 @@ State a short plan (files to create, per-tool outputs) before writing. Then gene
 - Canonical `AGENTS.md` + per-tool discovery files per `kb/harness-targets.md` (symlinks/pointers, per-directory files where the KB's size rules call for them).
 - Docs/memory system per `kb/memory-and-docs.md`. The notes layer (`docs/agent-notes.md`) is opt-in — generate it only if the user asks or the repo already has one to adopt, and then always as a set: file, AGENTS.md "read it when" pointer, capture line naming it, and the `consolidate-notes` skill. Never inline it into AGENTS.md.
 - Code navigation setup per `kb/code-navigation.md` for the measured size tier.
+- Machine-local config, per `kb/automation-surface.md`: any generated file whose correctness depends on absolute paths on THIS machine (sandbox `writable_roots` being the common case) is written, gitignored, and recorded under `machineLocal` — never hashed, baselined, or committed. Everything portable stays in the committed files.
 - Skills/commands/hooks/permissions per `kb/automation-surface.md` — only ones this repo's profile justifies; every hook command must be verified runnable before it's checked in.
 
 ### 4. Write the manifest and baseline
@@ -49,6 +51,7 @@ Write `.harness/manifest.json` in the target repo:
   "generatedAt": "<ISO date>",
   "profile": { "sizeTier": "...", "languages": ["..."], "targets": ["claude-code", "codex", "cursor", "pi"] },
   "files": { "<repo-relative path>": { "sha256": "<hash of generated content>" } },
+  "machineLocal": [{ "path": "<repo-relative path>", "rediscover": "<command that re-derives its machine-specific values>", "generatedAt": "<ISO date>" }],
   "overlays": [{ "name": "<overlay name>", "appliedAt": "<ISO date>" }]
 }
 ```
@@ -56,6 +59,7 @@ Write `.harness/manifest.json` in the target repo:
 - Record every file you created or modified EXCEPT anything under `.harness/` itself.
 - Regular files: `shasum -a 256`. Symlinks: record `{ "symlink": "<readlink output>" }` instead of a hash.
 - Copy each recorded regular file verbatim to `.harness/baseline/<repo-relative path>` — this is the merge base `/harness-update` needs to three-way merge hand-edited files. Add `.harness/baseline/` to the repo's ignore-for-agents surface if one exists (e.g. the settings deny list), not to .gitignore — the baseline should be committed with the harness.
+- `machineLocal` records files that are correct only on the machine that generated them. They are excluded from `files` and from `baseline/`, and added to `.gitignore` — their content legitimately differs per machine, so hashing them across machines produces false hand-edit conflicts. Store the command that re-derives each one so `/harness-update` can regenerate rather than merge. Omit the key when none exist.
 - `overlays` records only that a user overlay ran. Omit the key when none did.
 - This schema is a compatibility contract with `/harness-update` — extend additively only.
 
