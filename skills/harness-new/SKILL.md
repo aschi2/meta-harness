@@ -37,7 +37,11 @@ State a short plan (files to create, per-tool outputs) before writing. Then gene
 - Canonical `AGENTS.md` + per-tool discovery files per `kb/harness-targets.md` (symlinks/pointers, per-directory files where the KB's size rules call for them).
 - Docs/memory system per `kb/memory-and-docs.md`. The notes layer (`docs/agent-notes.md`) is opt-in — generate it only if the user asks or the repo already has one to adopt, and then always as a set: file, AGENTS.md "read it when" pointer, capture line naming it, and the `consolidate-notes` skill. Never inline it into AGENTS.md.
 - Code navigation setup per `kb/code-navigation.md` for the measured size tier.
-- Machine-specific values, per `kb/automation-surface.md`: a repo is shared across machines, so absolute paths never go in it. Write them to the tool's USER-level config (repo-external, e.g. `~/.codex/config.toml`), keep the repo file to portable policy, and record the setup under `machineSetup`. Ask before writing to a user-level config — it affects the user's other projects.
+- Machine-specific values, per `kb/automation-surface.md`: a repo is shared across machines, so absolute paths never go in it. Keep the repo file to portable policy and put the paths somewhere repo-external. **Never pick that location silently — it is outside the repo you were asked to work on.** Present the options with a recommendation, in this order:
+  1. The tool's user-level config (`~/.codex/config.toml`). Recommended when the values are genuinely machine-wide — a toolchain cache is the same for every project using that toolchain. No flags to remember, works in every session.
+  2. A named profile (Codex: its own `~/.codex/<name>.config.toml`, selected with `-p <name>`; `[profiles.X]` tables are rejected as legacy since 0.147). Recommended when the user does not want a machine-wide grant, accepting that every invocation must pass the flag — and say so, because a forgotten flag fails the same way as no config.
+  3. A gitignored file inside the repo. Only when the tool has no user-level layer, or the user wants nothing touched outside the repo. State the cost: `git clean -xdf` and fresh clones drop it, and it adds a personal entry to shared `.gitignore`.
+  Show the exact lines you propose to add and where, then write only what the user picks. Record the choice in `machineSetup.where`.
 - Skills/commands/hooks/permissions per `kb/automation-surface.md` — only ones this repo's profile justifies; every hook command must be verified runnable before it's checked in.
 
 ### 4. Write the manifest and baseline

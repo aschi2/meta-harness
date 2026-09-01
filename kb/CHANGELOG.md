@@ -2,6 +2,13 @@
 
 Newest first — new entries go at the top, with a unique heading (date + short slug). `/harness-update` scopes upgrades to the entries above a manifest's recorded `kbEntry`.
 
+## 2026-08-28 — the generator asks where repo-external config goes
+
+Writing outside the repo touches config shared with the user's other work, and the reasonable answer differs per person. The generator no longer picks silently.
+
+- skills/harness-new: presents three placements with a recommendation and each one's cost — user-level config (recommended when the values are machine-wide, e.g. a toolchain cache), a named profile (Codex profiles are their own `~/.codex/<name>.config.toml` selected with `-p`; `[profiles.X]` tables are rejected as legacy since 0.147, and a forgotten flag fails identically to no config), or a gitignored in-repo file (only when no user-level layer exists, or the user wants nothing touched outside the repo). Shows the exact lines first, writes only what is chosen, records it in `machineSetup.where`.
+- automation-surface: placement is the user's call, with the trade-offs stated.
+
 ## 2026-08-28 — machine-specific config goes repo-external
 
 Supersedes the `machineLocal` approach shipped hours earlier in 0.7.0, which gitignored the machine-specific file inside the repo. That was wrong for the reason a repo is shared: it lives on many machines at once, so a per-machine value inside it is right for one of them, gitignoring only hides that, and the file dies to `git clean -xdf` or a fresh clone. No field manifests used `machineLocal`; `/harness-update` still recognises it and offers to move it out.
