@@ -2,6 +2,15 @@
 
 Newest first — new entries go at the top, with a unique heading (date + short slug). `/harness-update` scopes upgrades to the entries above a manifest's recorded `kbEntry`.
 
+## 2026-08-28 — machine-specific config goes repo-external
+
+Supersedes the `machineLocal` approach shipped hours earlier in 0.7.0, which gitignored the machine-specific file inside the repo. That was wrong for the reason a repo is shared: it lives on many machines at once, so a per-machine value inside it is right for one of them, gitignoring only hides that, and the file dies to `git clean -xdf` or a fresh clone. No field manifests used `machineLocal`; `/harness-update` still recognises it and offers to move it out.
+
+- Verified 2026-08-28 (codex-cli 0.147.0) that Codex merges user and project config at KEY level: `writable_roots` in `~/.codex/config.toml` plus `network_access` in a repo's `.codex/config.toml` both apply, the project table not clobbering the user's array. That is what makes the split possible, and it corrects the prior entry's conclusion that the two could not be separated.
+- Manifest key `machineLocal` → `machineSetup`, recording what was granted, the repo-external location it went to, and the command that re-derives it. Nothing under it is hashed or baselined — it is not in the repo.
+- skills/harness-update step 3b re-applies machine setup on the current machine instead of regenerating an in-repo file, asks before touching user-level config, and reads legacy `machineLocal` entries as the same intent.
+- automation-surface: the portability rule now says repo-external first, with a gitignored in-repo file only as a documented fallback for tools that have no user-level layer.
+
 ## 2026-08-28 — discovered paths and machine-local config
 
 **Changes generator output and extends the manifest schema.** Generated harnesses previously inherited whatever absolute paths the generating machine had, so a harness that worked on macOS silently half-failed on a Linux VM.

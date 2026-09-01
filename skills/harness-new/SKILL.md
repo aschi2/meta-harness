@@ -37,7 +37,7 @@ State a short plan (files to create, per-tool outputs) before writing. Then gene
 - Canonical `AGENTS.md` + per-tool discovery files per `kb/harness-targets.md` (symlinks/pointers, per-directory files where the KB's size rules call for them).
 - Docs/memory system per `kb/memory-and-docs.md`. The notes layer (`docs/agent-notes.md`) is opt-in — generate it only if the user asks or the repo already has one to adopt, and then always as a set: file, AGENTS.md "read it when" pointer, capture line naming it, and the `consolidate-notes` skill. Never inline it into AGENTS.md.
 - Code navigation setup per `kb/code-navigation.md` for the measured size tier.
-- Machine-local config, per `kb/automation-surface.md`: any generated file whose correctness depends on absolute paths on THIS machine (sandbox `writable_roots` being the common case) is written, gitignored, and recorded under `machineLocal` — never hashed, baselined, or committed. Everything portable stays in the committed files.
+- Machine-specific values, per `kb/automation-surface.md`: a repo is shared across machines, so absolute paths never go in it. Write them to the tool's USER-level config (repo-external, e.g. `~/.codex/config.toml`), keep the repo file to portable policy, and record the setup under `machineSetup`. Ask before writing to a user-level config — it affects the user's other projects.
 - Skills/commands/hooks/permissions per `kb/automation-surface.md` — only ones this repo's profile justifies; every hook command must be verified runnable before it's checked in.
 
 ### 4. Write the manifest and baseline
@@ -51,7 +51,7 @@ Write `.harness/manifest.json` in the target repo:
   "generatedAt": "<ISO date>",
   "profile": { "sizeTier": "...", "languages": ["..."], "targets": ["claude-code", "codex", "cursor", "pi"] },
   "files": { "<repo-relative path>": { "sha256": "<hash of generated content>" } },
-  "machineLocal": [{ "path": "<repo-relative path>", "rediscover": "<command that re-derives its machine-specific values>", "generatedAt": "<ISO date>" }],
+  "machineSetup": [{ "what": "<what it grants>", "where": "<repo-external path, e.g. ~/.codex/config.toml>", "rediscover": "<command that re-derives the values>", "appliedAt": "<ISO date>" }],
   "overlays": [{ "name": "<overlay name>", "appliedAt": "<ISO date>" }]
 }
 ```
@@ -59,7 +59,7 @@ Write `.harness/manifest.json` in the target repo:
 - Record every file you created or modified EXCEPT anything under `.harness/` itself.
 - Regular files: `shasum -a 256`. Symlinks: record `{ "symlink": "<readlink output>" }` instead of a hash.
 - Copy each recorded regular file verbatim to `.harness/baseline/<repo-relative path>` — this is the merge base `/harness-update` needs to three-way merge hand-edited files. Add `.harness/baseline/` to the repo's ignore-for-agents surface if one exists (e.g. the settings deny list), not to .gitignore — the baseline should be committed with the harness.
-- `machineLocal` records files that are correct only on the machine that generated them. They are excluded from `files` and from `baseline/`, and added to `.gitignore` — their content legitimately differs per machine, so hashing them across machines produces false hand-edit conflicts. Store the command that re-derives each one so `/harness-update` can regenerate rather than merge. Omit the key when none exist.
+- `machineSetup` records configuration written OUTSIDE the repo, once per machine. It is not a file list: nothing under it is hashed, baselined, or committed, because it does not live in the repo at all. Store what it grants, where it went, and the command that re-derives it, so `/harness-update` can re-apply it on a machine that lacks it. Omit the key when none exist.
 - `overlays` records only that a user overlay ran. Omit the key when none did.
 - This schema is a compatibility contract with `/harness-update` — extend additively only.
 

@@ -31,11 +31,13 @@ For every path in `manifest.files`, compare disk state to the manifest (regular 
 
 New files the updated KB calls for (that the old KB didn't) are generated as in `/harness-new`.
 
-### 3b. Regenerate machine-local files
+### 3b. Re-apply machine setup
 
-For every entry in `manifest.machineLocal`: re-run its `rediscover` command on THIS machine and rewrite the file from the result. Do not three-way merge it and do not carry its previous values forward — the recorded values were correct for whichever machine generated them, and stale absolute paths fail silently rather than loudly. If a rediscover command no longer resolves (the toolchain moved or is absent), say so in the report and leave the file untouched rather than writing a guess.
+For every entry in `manifest.machineSetup`: this is configuration living OUTSIDE the repo, so a clone on a new machine will not have it. Re-run the entry's `rediscover` command on THIS machine, compare the result with what the `where` file currently grants, and offer to write it if absent or stale. Never carry values forward from the manifest — they were derived on whichever machine ran last, and a stale absolute path fails silently rather than loudly.
 
-A machine-local file that is missing entirely is the normal state on a fresh clone, not a deletion to respect: generate it.
+Ask before editing a user-level config; it is shared with the user's other projects. If a rediscover command no longer resolves, report it and change nothing rather than writing a guess.
+
+Manifests written by v0.7.0 may carry `machineLocal` (an in-repo gitignored file) instead. Treat it as the same intent, and offer to move it repo-external.
 
 ### 4. Verify and re-manifest
 
