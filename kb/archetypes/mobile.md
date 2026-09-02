@@ -1,6 +1,6 @@
 ---
 topic: archetypes/mobile
-reviewed: 2026-08-27
+reviewed: 2026-09-01
 ---
 
 # Mobile archetype (Flutter, iOS, Android, React Native)
@@ -27,6 +27,8 @@ Cheapest tier that answers the question, documented in AGENTS.md:
 Baseline discipline: iOS snapshots must be compared on the EXACT simulator that recorded them — name it in AGENTS.md (https://github.com/pointfreeco/swift-snapshot-testing, current); Git LFS for snapshot PNGs (Paparazzi's own recommendation); baseline-refresh commands named, and the agent that wrote the code doesn't solo-approve baseline updates (see testing-strategy.md).
 
 - When core-loop quality or user-visible polish conflicts with implementation convenience, favor the user; implementation cost is rarely the user's problem (https://github.com/cursor/plugins/tree/main/pstack, 2026-08).
+
+Touch targets are the one layout rule worth an AGENTS.md line: agents replicate small targets from training data (https://mintviz.usv.ro/publications/2025.W4A.3.pdf, W4A 2025), and the platform minimums are concrete and checkable — 44×44 pt (Apple HIG), 48×48 dp (Material) — where a "remember Fitts's Law" instruction is neither.
 
 ## Build harnessing
 

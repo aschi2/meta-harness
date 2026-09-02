@@ -1,6 +1,6 @@
 ---
 topic: archetypes/web-app
-reviewed: 2026-08-27
+reviewed: 2026-09-01
 ---
 
 # Web application archetype
@@ -29,6 +29,13 @@ Layered on top of runtime-feedback.md (browser surface, console forwarding, dev-
 Where a design system exists, emit the Storybook agent wiring (`@storybook/addon-mcp`: component manifests, story generation, `run-story-tests`) plus its guardrail line in AGENTS.md — "never use a component prop without checking the manifest; common-sounding props like `shadow` get hallucinated" (https://storybook.js.org/docs/ai, current — preview status, React-only; version-check before emitting). Figma Dev Mode MCP for design-to-code teams (beta pricing will change). Design-token pipelines are project-specific — the DTCG format is still a non-authoritative draft; don't scaffold token infrastructure.
 
 - When core-loop quality or user-visible polish conflicts with implementation convenience, favor the user; implementation cost is rarely the user's problem (https://github.com/cursor/plugins/tree/main/pstack, 2026-08).
+
+## UI defects agents actually produce (and what to encode)
+
+- The measured defects are accessibility ones: LLM-generated UIs replicate small touch targets, poor contrast ratios, and missing semantic structure from their training data, and accessibility-oriented prompts measurably reduce violation rates — though semantic-structure barriers persist (https://mintviz.usv.ro/publications/2025.W4A.3.pdf, W4A 2025; https://arxiv.org/abs/2510.13914, 2025-10). So a web harness carries WCAG-shaped rules, not design maxims.
+- Encode the CHECKABLE form: minimum target size (WCAG 2.2 SC 2.5.8, 24×24 CSS px at AA; 44×44 at AAA), contrast ratios (SC 1.4.3), landmarks/headings/labels for semantic structure — and gate them with axe-core in Playwright (see runtime-feedback.md). The underlying research is real (Fitts 1954 for target size; Gestalt grouping per https://pmc.ncbi.nlm.nih.gov/articles/PMC3482144/, 2012; Von Restorff for emphasis), but no evidence shows that naming the law to an agent helps, while the checkable rule both instructs and verifies.
+- Do NOT write popular "UX laws" into instructions as facts. Several are folklore: Miller's 7±2 was never about menus and working-memory capacity is ~3–5 chunks (https://pmc.ncbi.nlm.nih.gov/articles/PMC2864034/, 2010); the Doherty "400 ms" threshold does not appear in the 1982 paper it is attributed to; choice overload has a meta-analytic mean effect of "virtually zero" (https://academic.oup.com/jcr/article-lookup/doi/10.1086/651235, 2010); the Zeigarnik effect failed a 2025 meta-analysis. An agent will apply a stated "law" confidently whether or not it is true — see context-files.md on mentions as levers.
+- Vendor UI-guideline packs for agents (Vercel's ~150-rule web-interface-guidelines, Anthropic's frontend-design skill) ship without evals [observed 2026-09-01]. Treat them as a source of checkable rules to cherry-pick, not as evidence that long guideline lists help; the KB's own evidence says generic instruction content costs tokens without improving outcomes.
 
 ## Fullstack boundaries (RSC-era mistakes agents make)
 

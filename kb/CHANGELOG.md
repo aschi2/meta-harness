@@ -2,6 +2,14 @@
 
 Newest first — new entries go at the top, with a unique heading (date + short slug). `/harness-update` scopes upgrades to the entries above a manifest's recorded `kbEntry`.
 
+## 2026-09-01 — UX laws audited; accessibility rules adopted, folklore excluded
+
+Prompted by a "20 UX laws for Claude" social post. Audited all 30 Laws of UX against their cited primary sources and searched for evidence about agent-generated UI quality. Verdict: adopt the checkable accessibility form, exclude the law-name form, and flag the folklore.
+
+- archetypes/web-app: NEW section — the measured agent UI defects are accessibility ones (small touch targets, poor contrast, missing semantic structure), and accessibility prompts measurably reduce them (W4A 2025; A11YN 2025-10). Encode WCAG-shaped checkable rules gated by axe-core, not design maxims; no evidence exists that naming a law to an agent helps. Explicit do-not-encode list for contested laws: Miller's 7±2 (capacity is ~3–5 chunks, never about menus), the Doherty 400 ms (not in the paper), choice overload (meta-analytic mean effect ≈ zero), Zeigarnik (failed 2025 meta-analysis). Vendor UI-guideline packs noted as un-evaluated.
+- archetypes/mobile: touch-target minimums as the one layout rule worth a line (44 pt / 48 dp), with the same evidence.
+- Of the 30 laws: 8 established and layout-relevant, 8 supported, 7 heuristics, 4 constructs, 5 misattributed/contested. Only the Gestalt cluster, Fitts, and Von Restorff are both well-backed and code-embodied, and each reduces to a checkable rule.
+
 ## 2026-08-28 — the generator asks where repo-external config goes
 
 Writing outside the repo touches config shared with the user's other work, and the reasonable answer differs per person. The generator no longer picks silently.
