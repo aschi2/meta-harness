@@ -1,6 +1,6 @@
 ---
 topic: context-files
-reviewed: 2026-08-28
+reviewed: 2026-09-02
 ---
 
 # Context files (AGENTS.md / CLAUDE.md / rules)
@@ -30,8 +30,8 @@ Only non-inferable content — things an agent cannot derive by reading the code
 
 ## Size and format
 
-- Target: under 200 lines (Anthropic official, https://code.claude.com/docs/en/memory); practitioner consensus "under 300, shorter is better" (HumanLayer, 2025-11-25). Codex caps discovery at 32 KiB by default via `project_doc_max_bytes` — sources differ on whether that's per file or the combined chain, so keep the TOTAL instruction chain well under 32 KiB (https://learn.chatgpt.com/docs/agent-configuration/agents-md; see harness-targets.md). Generator default: aim for 60–150 lines; never exceed 200 without a per-directory split.
-- Per-line test: "would removing this cause mistakes?" If not, cut (https://code.claude.com/docs/en/memory).
+- Target: under 200 lines (Anthropic official, https://code.claude.com/docs/en/memory); practitioner consensus "under 300, shorter is better" (HumanLayer, 2025-11-25). Codex caps discovery at 32 KiB by default via `project_doc_max_bytes` — this caps the combined, concatenated AGENTS.md chain, not each file individually, so keep the TOTAL instruction chain well under 32 KiB (https://developers.openai.com/codex/noninteractive, fetched 2026-09-02; see harness-targets.md). Generator default: aim for 60–150 lines; never exceed 200 without a per-directory split.
+- Per-line test: "would removing this cause mistakes?" If not, cut (https://code.claude.com/docs/en/memory). `/doctor` proposes trims for a checked-in CLAUDE.md — cuts content derivable from the codebase, keeps pitfalls/rationale/conventions (v2.1.206+, https://code.claude.com/docs/en/memory, current).
 - Markdown headings + short imperative bullets; concrete and verifiable ("use 2-space indentation") over vague ("format properly"). No contradictory rules — contradictions get resolved arbitrarily (https://code.claude.com/docs/en/memory).
 - At most one "IMPORTANT" emphasis; emphasize everything and nothing stands out (https://code.claude.com/docs/en/best-practices).
 - If an agent keeps violating a rule that's written down, the file is too long — prune, don't add emphasis (https://code.claude.com/docs/en/best-practices).
@@ -47,7 +47,7 @@ Only non-inferable content — things an agent cannot derive by reading the code
 
 ## Evidence on value (calibrate effort accordingly)
 
-- Human-written context files: ~+4% task success, +up-to-19% cost; LLM-auto-generated files: ~−3% success, >+20% cost (https://arxiv.org/abs/2602.11988, 2026-02). Separate study: AGENTS.md presence cut median runtime 28.6% and output tokens 16.6% at comparable completion rates (https://arxiv.org/abs/2601.20404, 2026-01). Net: a curated file pays for itself in efficiency and non-inferable knowledge; auto-generated bloat is worse than nothing.
+- Neither human-written nor LLM-generated context files significantly beat a no-context baseline on task success, and both raise inference cost by more than 20% on average; developer-written files do beat LLM-generated ones by ~2.4% relative (p≈0.04) (https://arxiv.org/abs/2602.11988, 2026-02). Separate study: AGENTS.md presence cut median runtime 28.6% and output tokens 16.6% at comparable completion rates (https://arxiv.org/abs/2601.20404, 2026-01). Both studies measure fully unattended runs (SWE-bench/GitHub-issue-style agents, no human in the loop) — no equivalent measurement exists for steered/interactive sessions. Net: a curated file pays for itself in efficiency even without a proven success-rate lift; auto-generated bloat costs more without upside.
 - Consequence for the generator: NEVER ship raw auto-generated output. Every generated line must trace to the repo profile (a verified command, a real convention) or be cut. Instruction-following degrades with instruction count (~150–200 instructions practical ceiling, extrapolated from IFScale, https://arxiv.org/abs/2507.11538, 2025-07) [heuristic].
 
 ## Canonical-file convention
@@ -56,3 +56,5 @@ Only non-inferable content — things an agent cannot derive by reading the code
 - Claude Code does not read AGENTS.md natively: emit `CLAUDE.md` as either a symlink to AGENTS.md or a file containing `@AGENTS.md` plus Claude-specific lines (https://code.claude.com/docs/en/memory). Use the import form on Windows (symlinks need admin). See harness-targets.md for every tool's discovery rules.
 - Tool-specific instructions go in tool-scoped sections or the tool's own overlay file, never mixed unlabeled into shared content [preference].
 - Instruction files are prompt-injection attack surface — AGENTS.md, skills, and hooks get PR review like code (see security.md).
+- Autonomous: `claude -p` loads "the same context an interactive session would, including anything configured in the working directory or `~/.claude`" — project and user CLAUDE.md, hooks, `.mcp.json` servers — with no trust dialog, so the context file applies to unattended runs exactly as to interactive ones. `-p` starts in Manual permission mode on every plan; an unattended run needs `--permission-mode` or `--allowedTools` set or it stalls on the first prompt (https://code.claude.com/docs/en/headless, fetched 2026-09-02). Codex `codex exec` likewise reads AGENTS.md in non-interactive runs (https://developers.openai.com/codex/noninteractive, fetched 2026-09-02).
+- Claude Code's auto memory (Claude-written MEMORY.md, on by default since ~v2.1.59) is a separate, complementary persistent-context mechanism from CLAUDE.md — see memory-and-docs.md.

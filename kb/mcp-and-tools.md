@@ -1,6 +1,6 @@
 ---
 topic: mcp-and-tools
-reviewed: 2026-08-24
+reviewed: 2026-09-02
 ---
 
 # MCP and external-tool curation
@@ -30,14 +30,15 @@ Which integrations a generated harness wires in, and how. Governing principle: e
 
 ## Wiring rules
 
-- Project-shared servers in committed `.mcp.json`; approval is trust-gated interactively BUT headless/CI sessions load project servers WITHOUT the prompt — pair any committed server with `disabledMcpjsonServers` awareness in CI, and pin OAuth scopes per server (`oauth.scopes`) (https://code.claude.com/docs/en/mcp, current; see security.md for the attack side).
+- Project-shared servers in committed `.mcp.json`. Steered: first use of a project server prompts for interactive trust-gated approval. Autonomous: `claude -p`, Agent SDK, and cloud sessions "can't show that prompt: it loads project-scoped servers without asking" (https://code.claude.com/docs/en/mcp, fetched 2026-09-02); Cursor CLI `agent -p` likewise shares desktop MCP config with no headless gate (https://cursor.com/docs/cli/changelog, fetched 2026-09-02). Rule for autonomous: a committed `.mcp.json` is an implicit trust grant — only commit servers you would run unprompted, and use `disabledMcpjsonServers` for the rest, not just "awareness" of it. Pin OAuth scopes per server (`oauth.scopes`) — unset, Claude Code requests whatever scope the server advertises, which matters more in autonomous runs since no one sees the consent screen to notice over-broad scopes (v2.1.196+, same doc) (see security.md for the attack side).
+- Untrusted content reaching MCP tool calls, autonomous, SINGLE-SOURCE (one research team, corroborated by several outlets citing the same disclosure): "Comment and Control" found Claude Code Security Review Action, Gemini CLI Action, and Copilot Agent all interpolated PR titles/issue bodies/comments unsanitized into the prompt while the CI subprocess inherited API keys/`GITHUB_TOKEN`/OIDC tokens with no tool restriction (https://labs.cloudsecurityalliance.org/research/csa-research-note-claude-code-github-action-prompt-injection/, 2026-06-05). Autonomous rules: run agent workflows holding no write credentials; require environment protection before agent output is acted on; scope tools with `--allowedTools`/`--disallowedTools`. Related: agentjacking via Sentry MCP DSN injection recovered 85% of tested credentials from interactive agents (https://labs.cloudsecurityalliance.org/research/csa-research-note-agentjacking-mcp-sentry-injection-20260612/, 2026-06-12) [single-source] — its mitigation (human approval before acting on MCP content) is absent by construction in autonomous runs.
 - Scope tools: per-tool allowlists (`mcp__server__tool`), server `--toolsets`/read-only flags where offered (GitHub's server has both).
 - Bundle MCP servers inside skills rather than globally where the harness supports it — tools stay hidden until the skill loads (https://ampcode.com/manual, current).
 - Every emitted server gets one AGENTS.md line naming its purpose and when to use it [preference; mentions drive usage, see context-files.md].
 
 ## Maintenance reality
 
-12 of the original reference servers are already archived, several replaced by official vendor servers (https://github.com/modelcontextprotocol/servers, 2026-08-24); spec majors land ~2x/year. Rules: prefer official vendor servers; pin versions (`.mcpb` bundles where available); expect churn — `/harness-update` re-verifies emitted servers still exist and are still the blessed option.
+14 of the original reference servers are already archived (https://github.com/modelcontextprotocol/servers-archived, archived 2025-05-29), several replaced by official vendor servers (https://github.com/modelcontextprotocol/servers, 2026-08-24); spec majors land ~2x/year — the 2026-07-28 major deprecates Roots/Sampling/Logging and the legacy HTTP+SSE transport on a 12-month clock, so emitted servers on those get re-verified (https://blog.modelcontextprotocol.io/posts/2026-07-28/, 2026-07-28). Rules: prefer official vendor servers; pin versions (`.mcpb` bundles where available); expect churn — `/harness-update` re-verifies emitted servers still exist and are still the blessed option. Tool poisoning / "rug pull" — a tool's description or behavior silently changed after approval, with every session calling it inheriting the poisoned version — is the concrete "why" behind pinning; mitigation converges on version pinning, static scanning in CI, and signed/hashed tool definitions (https://labs.cloudsecurityalliance.org/research/csa-research-note-mcp-tool-poisoning-ai-agent-exfiltration-2/, 2026).
 
 ## Generator defaults
 

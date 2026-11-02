@@ -1,6 +1,6 @@
 ---
 topic: automation-surface
-reviewed: 2026-08-30
+reviewed: 2026-09-02
 ---
 
 # Automation surface: skills, hooks, subagents, permissions, verification
@@ -12,7 +12,7 @@ What executable/config machinery a generated harness includes. Governing princip
 - Create a skill when instructions are a PROCEDURE used sometimes (a checklist, a multi-step workflow, something repeatedly pasted into chat); facts and always-on conventions stay in AGENTS.md (https://code.claude.com/docs/en/skills, current). Reference material goes in skill supporting files, loaded on demand.
 - The Agent Skills format (SKILL.md + optional scripts/references/assets) is an open standard (https://agentskills.io/specification, current) supported by Claude Code, Codex, Cursor, pi, Copilot, Gemini CLI, and ~40 more tools — generated skills are cross-tool assets. Placement per tool is in harness-targets.md.
 - Spec essentials the generator must follow: `name` (lowercase-hyphen, matches dir name) + `description` (what it does AND when to use it, keyword-rich, key use case first — trigger reliability lives or dies on the description); body under 500 lines / ~5k tokens; file references one level deep; only the spec's six frontmatter fields are portable — Claude-specific fields (`disable-model-invocation`, `context`, `paths`, hooks) break portability, use them only in Claude-only repos.
-- Side-effect workflows (deploy, release, commit) get `disable-model-invocation: true` in Claude-only repos so only the user triggers them (https://code.claude.com/docs/en/skills, current); in cross-tool repos, state the same restriction in the skill body.
+- Side-effect workflows (deploy, release, commit) get `disable-model-invocation: true` in Claude-only repos so only the user triggers them (https://code.claude.com/docs/en/skills, current); in cross-tool repos, state the same restriction in the skill body. Autonomous: default every side-effecting skill to manual invocation in unattended runs — nobody catches a bad auto-trigger headless. Codex's analog is `allow_implicit_invocation: false` in the skill's `agents/openai.yaml` sidecar [not verified against developers.openai.com this pass].
 - Scripts for deterministic operations, prose for judgment; add scripts only where they improve reliability (https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills, 2025-10-16).
 - Caution: skills can fail to trigger — for always-needed knowledge prefer the AGENTS.md pointer index (see context-files.md, Vercel eval).
 - Generate few skills. Candidates that earn a skill in most repos: a "run/launch the app" recipe, a deploy/release procedure, a domain workflow with 3+ non-obvious steps. Everything else starts as an AGENTS.md line [heuristic].
@@ -49,7 +49,7 @@ Generated config is copied to other machines — a Linux VM, a container, a team
 - Only when a tool has no user-level layer at all does a gitignored in-repo file become the fallback, and then it is a documented compromise rather than the pattern.
 - Codex specifically has no local-override file: `~/.codex/config.toml` and a project's `.codex/config.toml` merge, `[projects."<path>"]` carries only `trust_level` (not sandbox settings), and no value expands environment variables (https://learn.chatgpt.com/docs/config-file/config-reference, 2026-08-28). A Codex project config that needs absolute paths is therefore machine-local by construction.
 
-- Hooks are Claude Code-specific (Codex's hooks feature is immature as of 2026) — for cross-tool repos, duplicate must-happen behaviors as CI checks so other tools' output is still gated (see Verification).
+- Codex CLI hooks reached general availability 2026-05-14 and support 12 lifecycle events (SessionStart, UserPromptSubmit, PreToolUse, PermissionRequest, PostToolUse, PreCompact, PostCompact, SubagentStart, SubagentStop, Stop, SessionEnd, Interrupt), shipped enabled by default; async/background hooks and an `mcp_tool` handler type were added 2026-08 (https://blakecrosley.com/blog/codex-hooks-make-the-harness-real, 2026-08-28 — practitioner-sourced, not an OpenAI primary page). Schemas still don't converge across tools — for cross-tool repos, generate hooks per tool where its schema is known, and replicate must-happen gates as CI checks as a backstop (see Verification).
 
 ## Subagents
 
@@ -64,12 +64,14 @@ Generated config is copied to other machines — a Linux VM, a container, a team
 - Generate: an allowlist of the repo's verified safe read/build/test commands (test runner, linter, formatter, git status/diff), deny rules for secrets paths and Read of generated/vendored dirs (also a navigation win, see code-navigation.md). The full secrets/exfiltration checklist, allowlist sharp edges, and CI posture live in security.md — apply it whenever emitting permissions. Promote repeatedly-approved commands to allow rules over time — encode that as a maintenance note, not more upfront rules.
 - Codex: repos can carry `.codex/config.toml`; secure default `sandbox_mode = "workspace-write"` + `approval_policy = "on-request"` (https://developers.openai.com/codex/concepts/sandboxing, current). Verify the current enum values against live docs at generation time — they drift between versions.
 - Never generate permission-bypass settings or auto-approve-everything profiles.
+- Mode split: steered — auto mode (a classifier reviews most actions instead of prompting the user) is the built-in default for interactive Pro/Max/Team sessions since 2026-08-14 (https://claude.com/blog/auto-mode-default-in-claude-code, 2026-08-07; https://code.claude.com/docs/en/permission-modes, current). Autonomous — `dontAsk` mode auto-denies anything that would otherwise prompt and is Anthropic's own answer for "locked-down CI and scripts"; `bypassPermissions`/`--dangerously-skip-permissions` only inside a container/VM/sandbox with egress locked down, and gives no protection against prompt injection (same citation). For unattended `claude -p` fan-outs, `--allowedTools` scoping is load-bearing, not optional (https://code.claude.com/docs/en/best-practices, fetched 2026-09-02). See security.md for the 2026-08-27 incident where auto mode's classifier itself blocked a kill command mid-attack — a classifier is a per-action control, not an isolation boundary.
 
 ## Verification loops
 
 - "Give the agent a way to verify its work" is the top-ranked practice: something that produces pass/fail closes the loop; require evidence (test output, command + result), not assertions (https://code.claude.com/docs/en/best-practices, current). Verification classes ranked: rules-based (tests/typecheck/lint — most robust) > visual (screenshots for UI) > LLM-as-judge (least robust) (https://claude.com/blog/building-agents-with-the-claude-agent-sdk, 2025-09-29).
 - Encode definition-of-done in this order: (1) AGENTS.md states the exact verify commands and "run before declaring done"; (2) Stop-gate hook for the cheap checks (Claude Code); (3) CI as the harness-independent backstop — headless review/checks on PR (claude -p / codex exec / Codex GitHub review integration) for teams already using CI.
 - A repo without tests gets an AGENTS.md rule that new code ships with a minimal runnable check, not a generated test framework [preference].
+- Mode split: steered — a prompt-level check plus in-conversation iteration is enough; a human backstops anything a missed check would have caught. Autonomous — needs a `/goal` condition or a deterministic Stop hook, which the docs call what "let[s] an unattended run finish correctly without you," plus a fresh-context adversarial review before the result is trusted; "the longer Claude works unattended, the more an independent check matters" (https://code.claude.com/docs/en/best-practices, fetched 2026-09-02). Caution from the same source: a reviewer prompted to find gaps will usually report some even when the work is sound — chasing every finding leads to over-engineering; scope reviewers to correctness/requirement gaps. Steered can triage findings by hand; autonomous can't, so the scoping matters more there.
 
 ## Distribution
 

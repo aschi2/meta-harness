@@ -1,6 +1,6 @@
 ---
 topic: runtime-feedback
-reviewed: 2026-08-24
+reviewed: 2026-09-02
 ---
 
 # Runtime feedback and debugging surfaces
@@ -21,7 +21,8 @@ Single entry command (`make dev`), duplicate-start guard with an actionable erro
 ## Browser loops (web repos)
 
 - One browser surface, documented in AGENTS.md — not several. Current options: **agent-browser** (Vercel's CLI — snapshot + deterministic refs, console/network/screenshots/vitals/React introspection; fastest-adopted tool in the space, and CLI means near-zero context cost — https://github.com/vercel-labs/agent-browser, 2026), **chrome-devtools-mcp** (perf traces, network, console — https://developer.chrome.com/blog/chrome-devtools-mcp, 2025-09-23), **Playwright MCP** (accessibility-tree based, what Copilot's agent ships — https://github.com/microsoft/playwright-mcp, current), or the harness's native browser (Claude in Chrome/Cursor browser). Prefer already-installed native tools, then CLI, then MCP (see mcp-and-tools.md). No rigorous head-to-head exists — pick by what the team already runs.
-- Screenshot-compare verification: well-supported for CATCHING regressions and verifying "it renders" (official prompt pattern: implement → screenshot → compare → fix; https://code.claude.com/docs/en/best-practices, current); unproven for pixel-accurate refinement — the one controlled study found self-revision-from-screenshots near-useless on 2024-era models (https://arxiv.org/abs/2403.03163, NAACL 2025). Encode it as a verification step, not a design-iteration engine.
+- Headed vs headless is itself the steered/autonomous knob: Playwright MCP defaults headed "so you can see what's happening" (useful for a steered reviewer watching the agent work), while Playwright CLI defaults headless, the autonomous requirement for unattended/no-display runs (https://playwright.dev/docs/getting-started-mcp and https://playwright.dev/docs/getting-started-cli, current).
+- Screenshot-compare verification: well-supported for CATCHING regressions and verifying "it renders" (official prompt pattern: implement → screenshot → compare → fix; https://code.claude.com/docs/en/best-practices, current); unproven for pixel-accurate refinement — the one controlled study found self-revision-from-screenshots near-useless on 2024-era models (https://arxiv.org/abs/2403.03163, NAACL 2025). Encode it as a verification step, not a design-iteration engine. Steered: a human reviews the resulting PR, so the agent's own screenshot judgment is an acceptable first pass. Autonomous: no human backstop, so prefer a deterministic check (pixel-diff/threshold against a pinned baseline, or the existing test oracle) over LLM self-assessment of a screenshot [heuristic, consistent with the self-revision finding above].
 - Visual snapshot tests (Playwright `toHaveScreenshot`) only with environment-pinned baselines (CI container) — cross-platform rendering makes local baselines flaky (https://playwright.dev/docs/test-snapshots, current). Accessibility: Playwright + axe-core as a gate where the team wants it (https://playwright.dev/docs/accessibility-testing, current).
 - Design-system repos: expose the system (Storybook MCP) so generation conforms instead of hallucinating components (https://www.chromatic.com/blog/introducing-published-storybook-mcp-servers/, 2026-03-23).
 

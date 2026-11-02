@@ -22,6 +22,7 @@ Spawn one research subagent per in-scope topic, in parallel, each with WebSearch
 
 - Primary sources first: official docs and engineering blogs of the tool/model vendors, then high-signal practitioners. Every claim needs a URL and a date.
 - Explicitly search for what changed since the topic's `reviewed:` date — new tool releases, new official guidance, retracted or superseded advice.
+- For every rule, ask whether it differs between engineer-steered work (interactive session, human can approve, redirect, triage) and autonomous work (headless `claude -p` / `codex exec`, CI, queue workers, no human until PR review). Report the split with evidence for each side; flag rules the topic file states once that are only right for one mode.
 - Also scan for NEW harness tools gaining real adoption (candidates for `kb/harness-targets.md`) and for KB claims that are now wrong — refutation is as valuable as addition.
 - Return raw structured findings with citations, plus a "disagreements / low-confidence" section. Mark anything unverifiable UNVERIFIED.
 

@@ -1,6 +1,6 @@
 ---
 topic: memory-and-docs
-reviewed: 2026-08-29
+reviewed: 2026-09-02
 ---
 
 # Memory and documentation systems
@@ -11,6 +11,7 @@ Rules for what memory/docs infrastructure a generated harness sets up. Memory ve
 
 - Plain-markdown filesystem memory is the proven baseline; specialized vector/graph memory stores are unnecessary for coding agents. Letta benchmarked filesystem memory + grep retrieval at 74.0% on LoCoMo vs Mem0's 68.5% graph variant (https://www.letta.com/blog/benchmarking-ai-agent-memory/, 2025-08-12). Vector/graph memory claims come mainly from vendors benchmarking their own products on conversational (not coding) workloads — do not generate that infrastructure.
 - The proven shape: an index file (one line per memory) + one topic file per fact, retrieved on demand. Claude Code's auto memory caps index loading at 200 lines / 25KB (https://code.claude.com/docs/en/memory, current). Generator: prefer each tool's NATIVE memory (Claude Code auto memory needs no setup) and only add a checked-in memory dir for cross-tool teams.
+- Codex CLI memory is proposed, not shipped — the design discussion is still soliciting input, with an explicit "do not try to use the memories for now" (https://github.com/openai/codex/discussions/12567, opened 2026-02-23). AGENTS.md remains the only cross-tool persistent context until it lands.
 - Memory entries should be typed (user/feedback/project/reference), timestamped, and — best documented design — carry citations to code locations that agents verify just-in-time before trusting; citation-verified memory pools self-healed even against deliberately seeded false memories (GitHub, 2026-01-15). Generated memory conventions must require absolute dates (relative dates rot) and forbid storing anything derivable from code or already in AGENTS.md.
 - Hygiene rules to encode: add a memory when the same mistake happens a second time (https://code.claude.com/docs/en/best-practices, current); delete contradicted memories rather than accumulating; keep memory human-auditable plain markdown.
 
@@ -55,7 +56,7 @@ A sixth artifact: one consolidated-learnings file (`docs/agent-notes.md`, templa
 
 ## Generator defaults
 
-- All repos: doc-freshness rule; second-mistake memory rule; native tool memory left on. AGENTS.md pointer section to docs/ only when doc files actually exist — never point at docs that aren't there.
+- All repos: doc-freshness rule; second-mistake memory rule. Native tool memory (e.g. Claude Code auto memory) is machine-local — "not shared across machines or cloud environments" (https://code.claude.com/docs/en/memory, fetched 2026-09-02). Steered: leave it on — a persistent dev machine accumulates it normally across sessions. Autonomous on ephemeral CI/queue/sandbox runners: it's a no-op unless the memory directory is explicitly persisted (volume mount, artifact cache) — the repo-committed layer (progress log, docs/) is the only memory that survives a fresh container. AGENTS.md pointer section to docs/ only when doc files actually exist — never point at docs that aren't there.
 - Repos with real docs or domain complexity: `docs/` skeleton with per-topic files (only ones that can be filled truthfully today).
 - Cross-tool teams: checked-in `docs/` + AGENTS.md conventions rather than any single tool's proprietary memory as the shared store [preference].
 - On request (or adopting an existing one): the notes layer above — the file, the AGENTS.md "read it when" pointer, the capture line naming it, and the consolidation procedure. Never one without the others.
