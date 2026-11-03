@@ -1,0 +1,13 @@
+{
+  "name": "bad-role",
+  "version": "0.1.0",
+  "domain": "fixture",
+  "description": "Invalid maintenance role fixture.",
+  "parts": ["loop"],
+  "knowledge": [],
+  "templates": [],
+  "checkers": [],
+  "profileSchema": "profile.schema.json",
+  "researchTopics": [],
+  "maintenance": ["maintenance/bad-role.md"]
+}

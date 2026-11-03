@@ -65,6 +65,9 @@ async function packageCopy(directory: string) {
   await cp(join(root, "packs/coding"), join(packageRoot, "packs/coding"), {
     recursive: true,
   });
+  await cp(join(root, "packs/base"), join(packageRoot, "packs/base"), {
+    recursive: true,
+  });
   await cp(join(root, ".claude-plugin"), join(packageRoot, ".claude-plugin"), {
     recursive: true,
   });
@@ -267,7 +270,7 @@ test("profile schema upgrades report behind and validate only the update plan", 
   expect((await check(workspace_.target, packageRoot)).errors).toEqual([]);
 });
 
-test.each(["signal", "unexpected exit"])(
+test.skipIf(process.platform === "win32").each(["signal", "unexpected exit"])(
   "merge %s writes no partial output",
   async (failure) => {
     const workspace_ = await initialized();
@@ -308,14 +311,11 @@ test("checker EACCES is reported and remaining checkers still run", async () => 
   const packRoot = join(packageRoot, "packs/coding");
   const path = join(packRoot, "pack.json");
   const pack = await Bun.file(path).json();
-  pack.checkers = ["checkers/noexec.sh", "checkers/next.sh"];
+  pack.checkers = ["checkers/noexec.sh", "checkers/next.ts"];
   await Bun.write(path, JSON.stringify(pack));
   await Bun.write(join(packRoot, "checkers/noexec.sh"), "#!/bin/sh\nexit 0\n");
-  const executable = join(packRoot, "checkers/next.sh");
-  await Bun.write(
-    executable,
-    "#!/bin/sh\nprintf 'next checker ran\\n'\nexit 0\n",
-  );
+  const executable = join(packRoot, "checkers/next.ts");
+  await Bun.write(executable, 'process.stdout.write("next checker ran\\n");');
   await chmod(executable, 0o755);
   const report = await check(workspace_.target, packageRoot);
   expect(

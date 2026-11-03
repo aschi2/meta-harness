@@ -1,0 +1,59 @@
+{
+  "type": "object",
+  "required": [
+    "agent"
+  ],
+  "properties": {
+    "agent": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "\\S"
+      },
+      "minItems": 1,
+      "allOf": [
+        {
+          "contains": {
+            "type": "string",
+            "pattern": "\\{prompt_file\\}"
+          }
+        },
+        {
+          "contains": {
+            "type": "string",
+            "pattern": "\\{worktree\\}"
+          }
+        }
+      ]
+    },
+    "publish": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "\\S"
+      },
+      "minItems": 1
+    },
+    "verify": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "\\S"
+      },
+      "minItems": 1
+    },
+    "timeoutMinutes": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "protectedPaths": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "\\S"
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

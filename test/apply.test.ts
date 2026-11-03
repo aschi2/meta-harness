@@ -1,6 +1,7 @@
 import { afterEach, expect, test } from "bun:test";
 import {
   chmod,
+  cp,
   lstat,
   mkdir,
   mkdtemp,
@@ -250,22 +251,25 @@ test("check detects drift and a global plus git-root-to-cwd Codex budget overflo
 test("check runs a failing pack checker in the target directory and reports its exit", async () => {
   const { target, directory } = await initialize();
   const packageRoot = join(directory, "package");
+  await cp(join(root, "packs/base"), join(packageRoot, "packs/base"), {
+    recursive: true,
+  });
   const packRoot = join(packageRoot, "packs/coding");
   const pack = await Bun.file(join(root, "packs/coding/pack.json")).json();
-  pack.checkers = ["checkers/fail.sh"];
+  pack.checkers = ["checkers/fail.ts"];
   await Bun.write(join(packRoot, "pack.json"), JSON.stringify(pack));
   await Bun.write(
     join(packRoot, "profile.schema.json"),
     await Bun.file(join(root, "packs/coding/profile.schema.json")).text(),
   );
-  const checker = join(packRoot, "checkers/fail.sh");
+  const checker = join(packRoot, "checkers/fail.ts");
   await Bun.write(
     checker,
-    '#!/bin/sh\ntest -f AGENTS.md || exit 9\nprintf "checker ran in target\\n"\nexit 7\n',
+    'if (!(await Bun.file("AGENTS.md").exists())) process.exit(9); process.stdout.write("checker ran in target\\n"); process.exit(7);',
   );
   await chmod(checker, 0o755);
   const report = await check(target, packageRoot);
-  expect(report.errors).toContain("Checker coding/checkers/fail.sh: exit 7");
+  expect(report.errors).toContain("Checker coding/checkers/fail.ts: exit 7");
   expect(report.messages).toContain("checker ran in target");
 });
 

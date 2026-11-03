@@ -4,7 +4,7 @@ import { dirname, extname, join, relative, resolve } from "node:path";
 import { matches, readHarness } from "./apply.ts";
 import { diskFile, hasConflictMarkers, safePath } from "./files.ts";
 import { PACKAGE_ROOT } from "./packs.ts";
-import type { InstructionBudget } from "./schema.ts";
+import { parseMaintenance, type InstructionBudget } from "./schema.ts";
 
 const CHECKER_TIMEOUT_MS = 30_000;
 export interface CheckReport {
@@ -108,7 +108,8 @@ export async function check(
         errors.push(`Unresolved conflict markers: ${path}`);
       if (extname(path).toLowerCase() !== ".json") continue;
       try {
-        JSON.parse(current.content);
+        const input: unknown = JSON.parse(current.content);
+        if (path === ".harness/maintenance.json") parseMaintenance(input);
       } catch (error) {
         errors.push(
           `Invalid JSON: ${path}: ${error instanceof Error ? error.message : String(error)}`,
@@ -167,7 +168,12 @@ export async function check(
       for (const checker of pack.manifest.checkers) {
         const command = join(pack.root, checker);
         try {
-          const result = Bun.spawnSync([command], {
+          const argv = [".ts", ".js", ".mjs"].includes(
+            extname(command).toLowerCase(),
+          )
+            ? [process.execPath, command]
+            : [command];
+          const result = Bun.spawnSync(argv, {
             cwd: target,
             timeout: CHECKER_TIMEOUT_MS,
           });

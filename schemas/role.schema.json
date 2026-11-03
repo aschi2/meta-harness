@@ -1,0 +1,120 @@
+{
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "job",
+    "prompt",
+    "defaultCadence",
+    "perRun",
+    "requiredEvidence",
+    "neverDo",
+    "requires",
+    "review",
+    "sources"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "title": {
+      "type": "string",
+      "pattern": "\\S"
+    },
+    "job": {
+      "type": "string",
+      "pattern": "^[^\\r\\n]+$"
+    },
+    "prompt": {
+      "type": "string",
+      "pattern": "\\S"
+    },
+    "defaultCadence": {
+      "type": "string",
+      "pattern": "^[0-9*/,-]+(?: [0-9*/,-]+){4}$"
+    },
+    "perRun": {
+      "type": "object",
+      "required": [
+        "maxPullRequests",
+        "maxChangedLines"
+      ],
+      "properties": {
+        "maxPullRequests": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "maxChangedLines": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "requiredEvidence": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "\\S"
+      },
+      "minItems": 1
+    },
+    "neverDo": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "\\S"
+      },
+      "minItems": 1
+    },
+    "requires": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "string",
+            "const": "repo"
+          },
+          {
+            "type": "string",
+            "const": "ci"
+          },
+          {
+            "type": "string",
+            "const": "local-toolchain"
+          },
+          {
+            "type": "string",
+            "const": "simulator"
+          },
+          {
+            "type": "string",
+            "const": "transcripts"
+          },
+          {
+            "type": "string",
+            "const": "connectors"
+          }
+        ]
+      },
+      "uniqueItems": true
+    },
+    "review": {
+      "type": "string",
+      "const": "pull-request"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri",
+        "pattern": "^https://"
+      },
+      "minItems": 1
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

@@ -1,3 +1,5 @@
+import { frontmatter } from "./frontmatter.ts";
+import { loadRole } from "./roles.ts";
 import { stat } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import {
@@ -43,6 +45,7 @@ export async function validate(path: string): Promise<ValidationResult> {
           ...pack.knowledge,
           ...pack.templates,
           ...pack.checkers,
+          ...(pack.maintenance ?? []),
           pack.profileSchema,
           ...(pack.changelog ? [pack.changelog] : []),
           ...pack.researchTopics.map((topic) => topic.path),
@@ -63,16 +66,20 @@ export async function validate(path: string): Promise<ValidationResult> {
             await Bun.file(join(packRoot, pack.profileSchema)).json(),
           );
         }
+        for (const rolePath of pack.maintenance ?? []) {
+          await loadRole(packRoot, rolePath);
+        }
         for (const topic of pack.researchTopics) {
           const file = Bun.file(join(packRoot, topic.path));
           if (!(await file.exists())) continue;
           const content = await file.text();
-          const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(
-            content,
-          )?.[1];
-          const reviewed = /^reviewed:\s*([^\r\n]+)$/m
-            .exec(frontmatter ?? "")?.[1]
-            ?.trim();
+          const { metadata } = frontmatter(content);
+          const reviewed =
+            typeof metadata === "object" &&
+            metadata !== null &&
+            "reviewed" in metadata
+              ? metadata.reviewed
+              : undefined;
           try {
             reviewedDate(reviewed, `${topic.path} reviewed`);
             if (reviewed !== topic.reviewed) {

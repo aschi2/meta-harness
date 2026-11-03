@@ -173,6 +173,14 @@
         "additionalProperties": false
       }
     },
+    "maintenance": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)[^\\u0000]+$"
+      }
+    },
     "researchTopics": {
       "type": "array",
       "items": {

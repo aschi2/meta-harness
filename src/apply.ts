@@ -59,7 +59,11 @@ export async function readHarness(target: string, packageRoot = PACKAGE_ROOT) {
   if (state.kind !== "file")
     throw new Error(`${MANIFEST_PATH}: expected a regular manifest file`);
   const manifest = parseHarnessManifest(JSON.parse(state.content));
-  const sources = manifest.packs ?? [{ name: "coding", version: "legacy" }];
+  const sources = [
+    ...(manifest.packs ?? [{ name: "coding", version: "legacy" }]),
+  ];
+  if (!sources.some((source) => source.name === "base"))
+    sources.push({ name: "base", version: "implicit" });
   const packs = await Promise.all(
     sources.map((source) => loadPack(source.name, packageRoot)),
   );
@@ -149,6 +153,8 @@ async function newManifest(
   const versions = new Map(
     (old?.packs ?? []).map((source) => [source.name, source]),
   );
+  const base = await loadPack("base", packageRoot);
+  versions.set("base", { name: "base", version: base.manifest.version });
   versions.set(pack.manifest.name, {
     name: pack.manifest.name,
     version: pack.manifest.version,

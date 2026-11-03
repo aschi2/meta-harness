@@ -130,11 +130,15 @@ Keep this.
     },
     "generatedAt": "<timestamp>",
     "kbEntry": "2026-11-03 — deterministic instruction budgets",
-    "metaHarnessVersion": "0.12.0",
+    "metaHarnessVersion": "0.13.0",
     "packs": [
       {
+        "name": "base",
+        "version": "0.1.0",
+      },
+      {
         "name": "coding",
-        "version": "0.2.0",
+        "version": "0.3.0",
       },
     ],
     "parts": {

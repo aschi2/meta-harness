@@ -1,6 +1,6 @@
 {
   "name": "coding",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "domain": "coding",
   "description": "Coding harness knowledge, templates, and research topics for AI development agents.",
   "parts": ["context", "knowledge", "actions", "checks", "loop"],
@@ -180,5 +180,19 @@
       "scope": "file",
       "description": "Coding pack policy based on Cursor rule guidance; not a documented AGENTS.md loading cap."
     }
+  ],
+  "maintenance": [
+    "maintenance/abstraction-improver.md",
+    "maintenance/abstraction-police.md",
+    "maintenance/coverage-gap-writer.md",
+    "maintenance/crash-fuzzer.md",
+    "maintenance/dead-code-remover.md",
+    "maintenance/docs-drift.md",
+    "maintenance/dup-unifier.md",
+    "maintenance/flaky-test-fixer.md",
+    "maintenance/logic-bug-fixer.md",
+    "maintenance/logic-simplifier.md",
+    "maintenance/shipped-feature-inliner.md",
+    "maintenance/useless-test-pruner.md"
   ]
 }

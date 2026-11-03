@@ -1,0 +1,23 @@
+{
+  "name": "base",
+  "version": "0.1.0",
+  "domain": "any",
+  "description": "Domain-neutral harness maintenance roles, included implicitly in every harness.",
+  "parts": ["loop"],
+  "knowledge": ["knowledge/scheduler-recipes.md", "CHANGELOG.md"],
+  "templates": [],
+  "checkers": [],
+  "profileSchema": "profile.schema.json",
+  "researchTopics": [
+    {
+      "path": "knowledge/scheduler-recipes.md",
+      "reviewed": "2026-11-03"
+    }
+  ],
+  "maintenance": [
+    "maintenance/knowledge-refresh.md",
+    "maintenance/correction-miner.md",
+    "maintenance/harness-check.md"
+  ],
+  "changelog": "CHANGELOG.md"
+}

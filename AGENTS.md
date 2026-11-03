@@ -1,13 +1,13 @@
 # meta-harness — agent instructions
 
-This repo contains a deterministic TypeScript core on Bun, domain packs, and a Claude Code plugin with three skills (`skills/*/SKILL.md`). `CLAUDE.md` is a symlink to this file.
+This repo contains a deterministic TypeScript core on Bun, domain packs, and a Claude Code plugin with four skills (`skills/*/SKILL.md`). `CLAUDE.md` is a symlink to this file.
 
 ## Layout
 
 - `src/` — deterministic core and TypeBox schema source; `schemas/` — generated JSON Schemas (`bun run schemas`); `test/` — Bun tests and broken fixtures.
-- `packs/coding/pack.json` — coding pack manifest; paths inside it are pack-relative.
+- `packs/coding/pack.json` — coding pack manifest; `packs/base/` — implicitly included domain-neutral roles and scheduler recipes. Paths inside packs are pack-relative.
 
-- `skills/harness-new/`, `skills/harness-update/`, `skills/harness-research/` — the skills. Orchestration logic lives here; best-practice CONTENT lives in `packs/coding/kb/`. Never duplicate KB content into a SKILL.md.
+- `skills/harness-new/`, `skills/harness-update/`, `skills/harness-research/`, `skills/harness-maintenance/` — the skills. Orchestration logic lives here; best-practice CONTENT lives in `packs/coding/kb/`. Never duplicate KB content into a SKILL.md.
 - `packs/coding/kb/` — the best-practices corpus. One topic per file, frontmatter with `reviewed:` date, claims cited inline as `(source URL, date)`. `packs/coding/kb/CHANGELOG.md` logs every refresh.
 - `packs/coding/templates/` — file templates the generator fills in. Templates carry `{{placeholders}}`; anything repo-specific is decided at generation time, not baked in.
 

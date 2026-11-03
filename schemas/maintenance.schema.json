@@ -1,0 +1,33 @@
+{
+  "type": "object",
+  "required": [
+    "roles"
+  ],
+  "properties": {
+    "roles": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-z0-9]+(?:-[a-z0-9]+)*$": {
+          "type": "object",
+          "required": [
+            "enabled",
+            "cadence"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "cadence": {
+              "type": "string",
+              "pattern": "^[0-9*/,-]+(?: [0-9*/,-]+){4}$"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

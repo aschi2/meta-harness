@@ -57,6 +57,74 @@ export const InstructionBudgetSchema = Type.Object(
   { additionalProperties: false },
 );
 
+const cron = Type.String({ pattern: "^[0-9*/,-]+(?: [0-9*/,-]+){4}$" });
+export const RoleSchema = Type.Object(
+  {
+    id: slug,
+    title: text,
+    job: Type.String({ pattern: "^[^\\r\\n]+$" }),
+    prompt: text,
+    defaultCadence: cron,
+    perRun: Type.Object(
+      {
+        maxPullRequests: Type.Integer({ minimum: 0, maximum: 1 }),
+        maxChangedLines: Type.Integer({ minimum: 1 }),
+      },
+      { additionalProperties: false },
+    ),
+    requiredEvidence: Type.Array(text, { minItems: 1 }),
+    neverDo: Type.Array(text, { minItems: 1 }),
+    requires: Type.Array(
+      Type.Union(
+        [
+          "repo",
+          "ci",
+          "local-toolchain",
+          "simulator",
+          "transcripts",
+          "connectors",
+        ].map((value) => Type.Literal(value)),
+      ),
+      { uniqueItems: true },
+    ),
+    review: Type.Literal("pull-request"),
+    sources: Type.Array(Type.String({ format: "uri", pattern: "^https://" }), {
+      minItems: 1,
+    }),
+  },
+  { $schema: JSON_SCHEMA_DRAFT, additionalProperties: false },
+);
+const argv = Type.Array(text, { minItems: 1 });
+export const MaintenanceSchema = Type.Object(
+  {
+    roles: Type.Record(
+      slug,
+      Type.Object(
+        { enabled: Type.Boolean(), cadence: cron },
+        { additionalProperties: false },
+      ),
+      { additionalProperties: false },
+    ),
+  },
+  { $schema: JSON_SCHEMA_DRAFT, additionalProperties: false },
+);
+
+export const MaintenanceUserSchema = Type.Object(
+  {
+    agent: Type.Array(text, {
+      minItems: 1,
+      allOf: ["prompt_file", "worktree"].map((name) => ({
+        contains: { type: "string", pattern: `\\{${name}\\}` },
+      })),
+    }),
+    publish: Type.Optional(argv),
+    verify: Type.Optional(argv),
+    timeoutMinutes: Type.Optional(Type.Number({ exclusiveMinimum: 0 })),
+    protectedPaths: Type.Optional(Type.Array(text)),
+  },
+  { $schema: JSON_SCHEMA_DRAFT, additionalProperties: false },
+);
+
 export const PackManifestSchema = Type.Object(
   {
     name: slug,
@@ -71,6 +139,7 @@ export const PackManifestSchema = Type.Object(
     changelog: Type.Optional(RelativeFileSchema),
     targetsField: Type.Optional(text),
     instructionBudgets: Type.Optional(Type.Array(InstructionBudgetSchema)),
+    maintenance: Type.Optional(paths),
     researchTopics: Type.Array(
       Type.Object({ path: RelativeFileSchema, reviewed: date }),
     ),
@@ -170,6 +239,10 @@ export const PlanSchema = Type.Object(
   { $schema: JSON_SCHEMA_DRAFT, additionalProperties: false },
 );
 
+export type Role = Type.Static<typeof RoleSchema>;
+export type MaintenanceUserConfig = Type.Static<typeof MaintenanceUserSchema>;
+export type MaintenanceConfig = Type.Static<typeof MaintenanceSchema>;
+
 export type HarnessPart = Type.Static<typeof part>;
 export type HarnessParts = Type.Static<typeof partMap>;
 export type PackManifest = Type.Static<typeof PackManifestSchema>;
@@ -192,6 +265,9 @@ function parser<const Definition extends object>(definition: Definition) {
   };
 }
 
+export const parseMaintenanceUser = parser(MaintenanceUserSchema);
+export const parseMaintenance = parser(MaintenanceSchema);
+export const parseRole = parser(RoleSchema);
 export const parsePlan = parser(PlanSchema);
 export const parsePackManifest = parser(PackManifestSchema);
 const parseHarness = parser(HarnessManifestSchema);

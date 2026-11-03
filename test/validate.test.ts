@@ -22,7 +22,7 @@ describe("validate CLI", () => {
   test("passes on the real repository", () => {
     const result = runValidate(root);
     expect(result.exitCode).toBe(0);
-    expect(result.output).toContain("Validated 1 pack(s).");
+    expect(result.output).toContain("Validated 2 pack(s).");
   });
 
   test.each([
