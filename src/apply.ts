@@ -25,6 +25,7 @@ import {
   HARNESS_PARTS,
   parseHarnessManifest,
   type FileRecord,
+  type FileMode,
   type HarnessManifest,
   type HarnessParts,
   type Plan,
@@ -39,12 +40,14 @@ interface PreparedFile {
   path: string;
   content: string;
   adopted: boolean;
+  mode: FileMode;
   parts: Plan["files"][number]["parts"];
 }
 interface PreparedLink {
   path: string;
   target: string;
   adopted: boolean;
+  mode: FileMode;
   parts: Plan["symlinks"][number]["parts"];
 }
 export interface ApplyReport {
@@ -70,12 +73,29 @@ export async function readHarness(target: string, packageRoot = PACKAGE_ROOT) {
   return { manifest, packs };
 }
 
-async function prepare(plan: Plan, pack: LoadedPack, target: string) {
+export function isOwnerPath(path: string, packs: LoadedPack[]): boolean {
+  return packs.some((pack) =>
+    (pack.manifest.ownerPaths ?? []).some(
+      (owner) => owner.toLowerCase() === path.toLowerCase(),
+    ),
+  );
+}
+
+async function prepare(
+  plan: Plan,
+  pack: LoadedPack,
+  target: string,
+  packs = [pack],
+) {
+  const mode = (
+    entry: Plan["files"][number] | Plan["symlinks"][number],
+  ): FileMode =>
+    isOwnerPath(entry.path, packs) ? "owner" : (entry.mode ?? "managed");
   const files: PreparedFile[] = [];
   for (const file of plan.files) {
     await safePath(target, file.path);
     if ("content" in file) {
-      files.push({ ...file, adopted: file.adopted ?? false });
+      files.push({ ...file, adopted: file.adopted ?? false, mode: mode(file) });
       continue;
     }
     if (!pack.manifest.templates.includes(file.template))
@@ -97,13 +117,18 @@ async function prepare(plan: Plan, pack: LoadedPack, target: string) {
       content,
       parts: file.parts,
       adopted: file.adopted ?? false,
+      mode: mode(file),
     });
   }
   const symlinks: PreparedLink[] = [];
   for (const link of plan.symlinks) {
     await safePath(target, link.path);
     symlinkDestination(target, link.path, link.target);
-    symlinks.push({ ...link, adopted: link.adopted ?? false });
+    symlinks.push({
+      ...link,
+      adopted: link.adopted ?? false,
+      mode: mode(link),
+    });
   }
   const linkMap = new Map(symlinks.map((link) => [link.path, link]));
   const filePaths = new Set(files.map((file) => file.path));
@@ -215,21 +240,38 @@ export async function init(
   if (!parts) throw new Error("Missing parts mapping");
   const writes: Write[] = [];
   const messages: string[] = [];
-  for (const file of prepared.files) {
-    writes.push(
-      { path: file.path, content: file.content },
-      { path: `${BASELINE_DIRECTORY}/${file.path}`, content: file.content },
-    );
-    records.set(file.path, { sha256: hash(file.content) });
-    setParts(parts, file.path, file.parts);
-    messages.push(`Wrote ${file.path}`);
+  const seeds: string[] = [];
+  for (const entry of [...prepared.files, ...prepared.symlinks]) {
+    const current = await diskFile(await safePath(target, entry.path));
+    const preserve = entry.mode !== "managed" && current.kind !== "missing";
+    const desired =
+      "content" in entry
+        ? { path: entry.path, content: entry.content }
+        : { path: entry.path, symlink: entry.target };
+    if (!preserve) writes.push(desired);
+    if (entry.mode === "seed") {
+      seeds.push(entry.path);
+    } else {
+      const generated =
+        "content" in entry
+          ? ({ kind: "file", content: entry.content } as const)
+          : ({ kind: "symlink", target: entry.target } as const);
+      const approved = preserve ? current : generated;
+      const mode = entry.mode === "owner" ? { mode: "owner" as const } : {};
+      if (approved.kind === "file") {
+        records.set(entry.path, { sha256: hash(approved.content), ...mode });
+        writes.push({
+          path: `${BASELINE_DIRECTORY}/${entry.path}`,
+          content: approved.content,
+        });
+      } else if (approved.kind === "symlink") {
+        records.set(entry.path, { symlink: approved.target, ...mode });
+      }
+    }
+    setParts(parts, entry.path, entry.parts);
+    messages.push(`${preserve ? "Adopted" : "Wrote"} ${entry.path}`);
   }
-  for (const link of prepared.symlinks) {
-    writes.push({ path: link.path, symlink: link.target });
-    records.set(link.path, { symlink: link.target });
-    setParts(parts, link.path, link.parts);
-    messages.push(`Linked ${link.path} -> ${link.target}`);
-  }
+  if (seeds.length) manifest.seedFiles = seeds;
   manifest.files = Object.fromEntries(records);
   parseHarnessManifest(manifest);
   writes.push({
@@ -378,11 +420,16 @@ async function entryChange(
 export async function update(options: ApplyOptions): Promise<ApplyReport> {
   const target = resolve(options.target);
   const packageRoot = options.packageRoot ?? PACKAGE_ROOT;
-  const { manifest: old } = await readHarness(target, packageRoot);
+  const { manifest: old, packs } = await readHarness(target, packageRoot);
   const { plan, pack } = await loadPlan(options.planPath, packageRoot);
-  const prepared = await prepare(plan, pack, target);
+  const prepared = await prepare(plan, pack, target, [...packs, pack]);
   const manifest = await newManifest(pack, plan, packageRoot, old);
   const records = new Map(Object.entries(old.files));
+  for (const [path, record] of records) {
+    if (isOwnerPath(path, [...packs, pack]))
+      records.set(path, { ...record, mode: "owner" });
+  }
+  const seeds = new Set(old.seedFiles ?? []);
   const parts = manifest.parts;
   if (!parts) throw new Error("Missing parts mapping");
   const deleted = new Set(old.deleted ?? []);
@@ -392,8 +439,8 @@ export async function update(options: ApplyOptions): Promise<ApplyReport> {
   const plannedPaths = new Set(
     [...prepared.files, ...prepared.symlinks].map((entry) => entry.path),
   );
-  for (const path of records.keys()) {
-    if (plannedPaths.has(path)) continue;
+  for (const [path, record] of records) {
+    if (plannedPaths.has(path) || record.mode === "owner") continue;
     const current = await diskFile(await safePath(target, path));
     if (current.kind !== "missing") continue;
     records.delete(path);
@@ -402,8 +449,49 @@ export async function update(options: ApplyOptions): Promise<ApplyReport> {
     messages.push(`Deleted by user; kept absent: ${path}`);
   }
   for (const entry of [...prepared.files, ...prepared.symlinks]) {
-    const current = await diskFile(await safePath(target, entry.path));
     const previous = records.get(entry.path);
+    const owner = entry.mode === "owner" || previous?.mode === "owner";
+    if (!owner && (entry.mode === "seed" || seeds.has(entry.path))) {
+      records.delete(entry.path);
+      seeds.add(entry.path);
+      deleted.delete(entry.path);
+      setParts(parts, entry.path, entry.parts);
+      messages.push(`Seed left untouched: ${entry.path}`);
+      continue;
+    }
+    const current = await diskFile(await safePath(target, entry.path));
+    if (owner && previous) {
+      records.set(entry.path, { ...previous, mode: "owner" });
+      setParts(parts, entry.path, entry.parts);
+      messages.push(`Owner file left untouched: ${entry.path}`);
+      continue;
+    }
+    if (owner && seeds.has(entry.path)) {
+      throw new Error(
+        `${entry.path}: seed cannot become owner without an approved baseline; initialize an owner file explicitly`,
+      );
+    }
+    if (owner && current.kind !== "missing") {
+      if (!entry.adopted)
+        throw new Error(
+          `${entry.path}: existing untracked file requires adopted: true`,
+        );
+      if (current.kind === "file") {
+        records.set(entry.path, {
+          sha256: hash(current.content),
+          mode: "owner",
+        });
+        writes.push({
+          path: `${BASELINE_DIRECTORY}/${entry.path}`,
+          content: current.content,
+        });
+      } else {
+        records.set(entry.path, { symlink: current.target, mode: "owner" });
+      }
+      setParts(parts, entry.path, entry.parts);
+      messages.push(`Adopted owner file: ${entry.path}`);
+      continue;
+    }
     if ((previous || deleted.has(entry.path)) && current.kind === "missing") {
       deleted.add(entry.path);
       records.delete(entry.path);
@@ -423,11 +511,15 @@ export async function update(options: ApplyOptions): Promise<ApplyReport> {
       conflicts.push(entry.path);
       continue;
     }
-    records.set(entry.path, change.record);
+    records.set(
+      entry.path,
+      owner ? { ...change.record, mode: "owner" } : change.record,
+    );
     setParts(parts, entry.path, entry.parts);
   }
   manifest.files = Object.fromEntries(records);
   manifest.deleted = [...deleted].sort();
+  if (seeds.size || old.seedFiles) manifest.seedFiles = [...seeds].sort();
   parseHarnessManifest(manifest);
   writes.push({
     path: MANIFEST_PATH,

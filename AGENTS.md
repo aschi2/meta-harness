@@ -5,7 +5,7 @@ This repo contains a deterministic TypeScript core on Bun, domain packs, and a C
 ## Layout
 
 - `src/` — deterministic core and TypeBox schema source; `schemas/` — generated JSON Schemas (`bun run schemas`); `test/` — Bun tests and broken fixtures.
-- `packs/coding/pack.json` — coding pack manifest; `packs/base/` — implicitly included domain-neutral roles and scheduler recipes. Paths inside packs are pack-relative.
+- `packs/coding/`, `packs/knowledge-wiki/`, `packs/coaching/` — domain packs; `packs/base/` — implicitly included domain-neutral roles and scheduler recipes. Paths inside packs are pack-relative.
 
 - `skills/harness-new/`, `skills/harness-update/`, `skills/harness-research/`, `skills/harness-maintenance/` — the skills. Orchestration logic lives here; best-practice CONTENT lives in `packs/coding/kb/`. Never duplicate KB content into a SKILL.md.
 - `packs/coding/kb/` — the best-practices corpus. One topic per file, frontmatter with `reviewed:` date, claims cited inline as `(source URL, date)`. `packs/coding/kb/CHANGELOG.md` logs every refresh.

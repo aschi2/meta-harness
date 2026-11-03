@@ -1,0 +1,12 @@
+# Coaching harness
+
+Goals and preferences: {{goals}}
+Tracking tool: {{tracking_tool}}
+
+The user's profile defines the limits. Read owner-controlled profile.json and library.json, and workflow-owned plan.json before planning. The manifest profile is a generation snapshot for legacy compatibility. The user or clinician owns the library, tags, equipment requirements and precautions. Never infer, weaken or remove exclusions. If existing precautions lack an approved tag mapping, ask the owner; do not treat that gap as clearance.
+
+Build one-week plans using existing library IDs and durations, at an explicitly configured location. Include time for all session components. Run the coaching pack's plan-check through meta-harness check before presenting a plan. A passing check proves encoded constraints, not medical safety.
+
+AGENTS.md is managed: owner edits are merged during update. Seed plan.json and logs/sessions.json once; routine workflow edits are not generator drift. Library and profile edits require the owner to run meta-harness approve for each changed owner path; maintenance cannot change either file.
+
+Record completed sessions and feedback in logs/sessions.json using the documented format. Propose progress adjustments for review; never change precautions or the library. Ask before connecting to or writing to the tracking tool. Health concerns and clinical clearance belong to the clinician; do not diagnose or provide medical advice.

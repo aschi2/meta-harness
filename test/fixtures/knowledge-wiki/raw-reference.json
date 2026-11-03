@@ -1,0 +1,5 @@
+{
+  "rule": "raw-reference",
+  "path": "wiki/analysis/overview.md",
+  "content": "---\ntype: analysis\nsources: [raw/missing.txt]\n---\n# Synthetic missing provenance\n"
+}

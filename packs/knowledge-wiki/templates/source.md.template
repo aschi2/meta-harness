@@ -1,0 +1,18 @@
+---
+title: {{title_yaml}}
+type: source
+reviewed: {{reviewed}}
+source_date: {{source_date}}
+sources:
+  - {{raw_path_yaml}}
+---
+
+# {{title}}
+
+## Evidence
+
+{{dated_cited_summary}}
+
+## Limits and open questions
+
+{{limits_and_questions}}

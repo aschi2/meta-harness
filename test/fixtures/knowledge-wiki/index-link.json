@@ -1,0 +1,5 @@
+{
+  "rule": "index-link",
+  "path": "wiki/index.md",
+  "content": "---\n{}\n---\n[Source](sources/example.md)\n[Missing](missing.md)\n"
+}

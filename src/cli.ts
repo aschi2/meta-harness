@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import { parseArgs } from "node:util";
 import { init, update } from "./apply.ts";
+import { approve } from "./approve.ts";
 import { check } from "./check.ts";
 import {
   maintenanceList,
@@ -12,7 +13,7 @@ import {
 import { validate } from "./validate.ts";
 
 const USAGE =
-  "meta-harness validate [path] | init --pack <name> --plan <plan.json> --target <dir> | update --plan <plan.json> --target <dir> | check --target <dir>";
+  "meta-harness validate [path] | init --pack <name> --plan <plan.json> --target <dir> | update --plan <plan.json> --target <dir> | check --target <dir> | approve <path> --target <dir>";
 
 try {
   const [command, ...arguments_] = Bun.argv.slice(2);
@@ -86,8 +87,9 @@ try {
     if (result.errors.length) throw new Error(result.errors.join("\n"));
     process.stdout.write(`Validated ${result.manifests.length} pack(s).\n`);
   } else {
-    const { values } = parseArgs({
+    const { values, positionals } = parseArgs({
       args: arguments_,
+      allowPositionals: command === "approve",
       options: {
         pack: { type: "string" },
         plan: { type: "string" },
@@ -96,7 +98,12 @@ try {
       strict: true,
     });
     if (!values.target) throw new Error(USAGE);
-    if (command === "check") {
+    if (command === "approve") {
+      const [path, ...extra] = positionals;
+      if (!path || extra.length || values.plan || values.pack)
+        throw new Error(USAGE);
+      process.stdout.write((await approve(path, values.target)) + "\n");
+    } else if (command === "check") {
       if (values.plan || values.pack) throw new Error(USAGE);
       const report = await check(values.target);
       process.stdout.write(`${report.messages.join("\n")}\n`);

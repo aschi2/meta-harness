@@ -34,7 +34,7 @@
                   {
                     "type": "string",
                     "minLength": 1,
-                    "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)[^\\u0000]+$"
+                    "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)(?!.*[. ](?:/|$))(?!.*(?:^|/)(?:[cC][oO][nN]|[pP][rR][nN]|[aA][uU][xX]|[nN][uU][lL]|[cC][oO][mM][1-9]|[lL][pP][tT][1-9])(?:[.]|/|$))[^\\u0000]+$"
                   },
                   {
                     "type": "string",
@@ -76,6 +76,26 @@
               },
               "adopted": {
                 "type": "boolean"
+              },
+              "mode": {
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "const": "managed"
+                      },
+                      {
+                        "type": "string",
+                        "const": "owner"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "const": "seed"
+                  }
+                ]
               }
             },
             "additionalProperties": false
@@ -94,7 +114,7 @@
                   {
                     "type": "string",
                     "minLength": 1,
-                    "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)[^\\u0000]+$"
+                    "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)(?!.*[. ](?:/|$))(?!.*(?:^|/)(?:[cC][oO][nN]|[pP][rR][nN]|[aA][uU][xX]|[nN][uU][lL]|[cC][oO][mM][1-9]|[lL][pP][tT][1-9])(?:[.]|/|$))[^\\u0000]+$"
                   },
                   {
                     "type": "string",
@@ -105,7 +125,7 @@
               "template": {
                 "type": "string",
                 "minLength": 1,
-                "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)[^\\u0000]+$"
+                "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)(?!.*[. ](?:/|$))(?!.*(?:^|/)(?:[cC][oO][nN]|[pP][rR][nN]|[aA][uU][xX]|[nN][uU][lL]|[cC][oO][mM][1-9]|[lL][pP][tT][1-9])(?:[.]|/|$))[^\\u0000]+$"
               },
               "variables": {
                 "type": "object",
@@ -146,6 +166,26 @@
               },
               "adopted": {
                 "type": "boolean"
+              },
+              "mode": {
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "const": "managed"
+                      },
+                      {
+                        "type": "string",
+                        "const": "owner"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "const": "seed"
+                  }
+                ]
               }
             },
             "additionalProperties": false
@@ -168,7 +208,7 @@
               {
                 "type": "string",
                 "minLength": 1,
-                "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)[^\\u0000]+$"
+                "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)(?!.*[. ](?:/|$))(?!.*(?:^|/)(?:[cC][oO][nN]|[pP][rR][nN]|[aA][uU][xX]|[nN][uU][lL]|[cC][oO][mM][1-9]|[lL][pP][tT][1-9])(?:[.]|/|$))[^\\u0000]+$"
               },
               {
                 "type": "string",
@@ -211,6 +251,26 @@
           },
           "adopted": {
             "type": "boolean"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "const": "managed"
+                  },
+                  {
+                    "type": "string",
+                    "const": "owner"
+                  }
+                ]
+              },
+              {
+                "type": "string",
+                "const": "seed"
+              }
+            ]
           }
         },
         "additionalProperties": false

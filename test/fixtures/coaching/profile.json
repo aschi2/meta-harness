@@ -1,0 +1,19 @@
+{
+  "goals": ["Practice a general skill consistently."],
+  "constraints": {
+    "sessionMinutes": 20,
+    "sessionsPerWeek": 2,
+    "equipmentByLocation": {
+      "studio": ["band"],
+      "travel": []
+    }
+  },
+  "precautions": [
+    {
+      "providedBy": "user",
+      "excludedTags": ["impact"],
+      "notes": "Synthetic owner-provided exclusion."
+    }
+  ],
+  "trackingTool": "local session log"
+}

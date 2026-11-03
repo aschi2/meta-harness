@@ -1,0 +1,19 @@
+---
+title: {{title_yaml}}
+type: analysis
+reviewed: {{reviewed}}
+sources:
+  - {{raw_path_yaml}}
+---
+
+# {{title}}
+
+Supporting wiki sources: {{source_page_links}}
+
+## Synthesis
+
+{{dated_cited_analysis}}
+
+## Inferences and contradictions
+
+{{inferences_and_contradictions}}

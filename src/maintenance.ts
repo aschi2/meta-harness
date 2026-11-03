@@ -128,7 +128,7 @@ async function state(targetPath: string, packageRoot = PACKAGE_ROOT) {
     content === undefined ? defaults : parseMaintenance(JSON.parse(content));
   for (const settings of Object.values(config.roles))
     parseCron(settings.cadence);
-  return { target, manifest, roles, config };
+  return { target, manifest, packs, roles, config };
 }
 
 export function maintenanceUserConfigPath(configPath?: string): string {
@@ -666,7 +666,13 @@ export async function maintenanceRun(
       ],
       current.target,
     );
-    validateChangedPaths(rawDiff, config.protectedPaths);
+    validateChangedPaths(rawDiff, [
+      ...(config.protectedPaths ?? []),
+      ...current.packs.flatMap((pack) => pack.manifest.ownerPaths ?? []),
+      ...Object.entries(current.manifest.files)
+        .filter(([, record]) => record.mode === "owner")
+        .map(([path]) => path),
+    ]);
     const numstat = await command(
       run,
       [

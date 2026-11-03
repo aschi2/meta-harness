@@ -15,6 +15,7 @@ import { check } from "../src/check.ts";
 import { init, update } from "../src/apply.ts";
 import { applyWrites, hash, symlinkDestination } from "../src/files.ts";
 
+import { INTEGRATION_TIMEOUT_MS } from "./constants.ts";
 const root = join(import.meta.dir, "..");
 const cli = join(root, "src/cli.ts");
 const fixture = await Bun.file(
@@ -79,56 +80,66 @@ test.each([
   ".HARNESS/baseline/AGENTS.md",
   "nested/.GiT/config",
   "nested/.HaRnEsS/manifest.json",
-])("reserved path segments reject %s before writing", async (path) => {
-  const workspace_ = await workspace();
-  Bun.spawnSync(["git", "init", "-q", workspace_.target]);
-  const configPath = join(workspace_.target, ".git/config");
-  const original = await Bun.file(configPath).text();
-  workspace_.plan.files.push({
-    path,
-    content: "unsafe\n",
-    parts: ["context"],
-    adopted: true,
-  });
-  await savePlan(workspace_);
-  await expect(init({ ...workspace_, packName: "coding" })).rejects.toThrow();
-  expect(await Bun.file(configPath).text()).toBe(original);
-  expect(
-    await Bun.file(join(workspace_.target, ".harness/manifest.json")).exists(),
-  ).toBe(false);
-  expect(() => symlinkDestination(workspace_.target, "link", path)).toThrow(
-    "reserved",
-  );
-});
+])(
+  "reserved path segments reject %s before writing",
+  async (path) => {
+    const workspace_ = await workspace();
+    Bun.spawnSync(["git", "init", "-q", workspace_.target]);
+    const configPath = join(workspace_.target, ".git/config");
+    const original = await Bun.file(configPath).text();
+    workspace_.plan.files.push({
+      path,
+      content: "unsafe\n",
+      parts: ["context"],
+      adopted: true,
+    });
+    await savePlan(workspace_);
+    await expect(init({ ...workspace_, packName: "coding" })).rejects.toThrow();
+    expect(await Bun.file(configPath).text()).toBe(original);
+    expect(
+      await Bun.file(
+        join(workspace_.target, ".harness/manifest.json"),
+      ).exists(),
+    ).toBe(false);
+    expect(() => symlinkDestination(workspace_.target, "link", path)).toThrow(
+      "reserved",
+    );
+  },
+  INTEGRATION_TIMEOUT_MS,
+);
 
-test("nested symlink targets use manifest paths through init, check and update", async () => {
-  const workspace_ = await workspace();
-  workspace_.plan.files.push({
-    path: "docs/AGENTS.md",
-    content: "Nested instructions\n",
-    parts: ["context"],
-  });
-  workspace_.plan.symlinks = [
-    { path: "CLAUDE.md", target: "docs/AGENTS.md", parts: ["context"] },
-    { path: "docs/CLAUDE.md", target: "AGENTS.md", parts: ["context"] },
-    { path: "docs/linked.md", target: "../CLAUDE.md", parts: ["context"] },
-  ];
-  await savePlan(workspace_);
-  expect(
-    symlinkDestination(workspace_.target, "CLAUDE.md", "docs/AGENTS.md"),
-  ).toBe("docs/AGENTS.md");
-  await init({ ...workspace_, packName: "coding" });
-  expect(await Bun.file(join(workspace_.target, "CLAUDE.md")).text()).toBe(
-    "Nested instructions\n",
-  );
-  const manifest = await Bun.file(
-    join(workspace_.target, ".harness/manifest.json"),
-  ).json();
-  expect(manifest.files["CLAUDE.md"]).toEqual({ symlink: "docs/AGENTS.md" });
-  expect((await check(workspace_.target)).errors).toEqual([]);
-  expect((await update(workspace_)).conflicts).toEqual([]);
-  expect((await check(workspace_.target)).errors).toEqual([]);
-});
+test(
+  "nested symlink targets use manifest paths through init, check and update",
+  async () => {
+    const workspace_ = await workspace();
+    workspace_.plan.files.push({
+      path: "docs/AGENTS.md",
+      content: "Nested instructions\n",
+      parts: ["context"],
+    });
+    workspace_.plan.symlinks = [
+      { path: "CLAUDE.md", target: "docs/AGENTS.md", parts: ["context"] },
+      { path: "docs/CLAUDE.md", target: "AGENTS.md", parts: ["context"] },
+      { path: "docs/linked.md", target: "../CLAUDE.md", parts: ["context"] },
+    ];
+    await savePlan(workspace_);
+    expect(
+      symlinkDestination(workspace_.target, "CLAUDE.md", "docs/AGENTS.md"),
+    ).toBe("docs/AGENTS.md");
+    await init({ ...workspace_, packName: "coding" });
+    expect(await Bun.file(join(workspace_.target, "CLAUDE.md")).text()).toBe(
+      "Nested instructions\n",
+    );
+    const manifest = await Bun.file(
+      join(workspace_.target, ".harness/manifest.json"),
+    ).json();
+    expect(manifest.files["CLAUDE.md"]).toEqual({ symlink: "docs/AGENTS.md" });
+    expect((await check(workspace_.target)).errors).toEqual([]);
+    expect((await update(workspace_)).conflicts).toEqual([]);
+    expect((await check(workspace_.target)).errors).toEqual([]);
+  },
+  INTEGRATION_TIMEOUT_MS,
+);
 
 test.each(['pytest -k "not slow"', "echo {{x}}", "echo C:\\tools\nnext line"])(
   "JSON templates escape and preserve literal variable %s",
@@ -143,25 +154,32 @@ test.each(['pytest -k "not slow"', "echo {{x}}", "echo C:\\tools\nnext line"])(
     expect(settings.permissions.allow[0]).toBe(`Bash(${value}*)`);
     expect((await check(workspace_.target)).errors).toEqual([]);
   },
+  INTEGRATION_TIMEOUT_MS,
 );
 
-test("check rejects managed invalid JSON even when its recorded hash matches", async () => {
-  const { target } = await initialized();
-  const path = ".claude/settings.json";
-  const content = '{"invalid":';
-  await Bun.write(join(target, path), content);
-  const manifestPath = join(target, ".harness/manifest.json");
-  const manifest = await Bun.file(manifestPath).json();
-  manifest.files[path].sha256 = hash(content);
-  await Bun.write(manifestPath, JSON.stringify(manifest));
-  const report = await check(target);
-  expect(
-    report.errors.some((error) =>
-      error.includes("Invalid JSON: .claude/settings.json"),
-    ),
-  ).toBe(true);
-  expect(report.errors.some((error) => error.startsWith("Drift:"))).toBe(false);
-});
+test(
+  "check rejects managed invalid JSON even when its recorded hash matches",
+  async () => {
+    const { target } = await initialized();
+    const path = ".claude/settings.json";
+    const content = '{"invalid":';
+    await Bun.write(join(target, path), content);
+    const manifestPath = join(target, ".harness/manifest.json");
+    const manifest = await Bun.file(manifestPath).json();
+    manifest.files[path].sha256 = hash(content);
+    await Bun.write(manifestPath, JSON.stringify(manifest));
+    const report = await check(target);
+    expect(
+      report.errors.some((error) =>
+        error.includes("Invalid JSON: .claude/settings.json"),
+      ),
+    ).toBe(true);
+    expect(report.errors.some((error) => error.startsWith("Drift:"))).toBe(
+      false,
+    );
+  },
+  INTEGRATION_TIMEOUT_MS,
+);
 
 test.each([false, true])(
   "missing baseline is isolated when user-edited=%s",
@@ -183,69 +201,84 @@ test.each([false, true])(
       edited ? "User guide\n" : "New guide\n",
     );
   },
+  INTEGRATION_TIMEOUT_MS,
 );
 
-test("resolved merge conflicts survive rerunning the same plan", async () => {
-  const workspace_ = await initialized();
-  const { target, plan } = workspace_;
-  const path = join(target, "AGENTS.md");
-  await Bun.write(
-    path,
-    fixture.files[0].content.replace("bun test\n", "bun run user-tests\n"),
-  );
-  plan.files[0].content = fixture.files[0].content.replace(
-    "bun test\n",
-    "bun test --bail\n",
-  );
-  await savePlan(workspace_);
-  expect((await update(workspace_)).conflicts).toEqual(["AGENTS.md"]);
-  expect(
-    await Bun.file(join(target, ".harness/baseline/AGENTS.md")).text(),
-  ).toBe(plan.files[0].content);
-  const resolved = fixture.files[0].content.replace(
-    "bun test\n",
-    "bun run user-tests\nbun test --bail\n",
-  );
-  await Bun.write(path, resolved);
-  expect((await update(workspace_)).conflicts).toEqual([]);
-  expect(await Bun.file(path).text()).toBe(resolved);
-  expect((await check(target)).errors).toEqual([]);
-});
+test(
+  "resolved merge conflicts survive rerunning the same plan",
+  async () => {
+    const workspace_ = await initialized();
+    const { target, plan } = workspace_;
+    const path = join(target, "AGENTS.md");
+    await Bun.write(
+      path,
+      fixture.files[0].content.replace("bun test\n", "bun run user-tests\n"),
+    );
+    plan.files[0].content = fixture.files[0].content.replace(
+      "bun test\n",
+      "bun test --bail\n",
+    );
+    await savePlan(workspace_);
+    expect((await update(workspace_)).conflicts).toEqual(["AGENTS.md"]);
+    expect(
+      await Bun.file(join(target, ".harness/baseline/AGENTS.md")).text(),
+    ).toBe(plan.files[0].content);
+    const resolved = fixture.files[0].content.replace(
+      "bun test\n",
+      "bun run user-tests\nbun test --bail\n",
+    );
+    await Bun.write(path, resolved);
+    expect((await update(workspace_)).conflicts).toEqual([]);
+    expect(await Bun.file(path).text()).toBe(resolved);
+    expect((await check(target)).errors).toEqual([]);
+  },
+  INTEGRATION_TIMEOUT_MS,
+);
 
-test("check rejects recorded conflict markers without relying on drift", async () => {
-  const workspace_ = await workspace();
-  workspace_.plan.files[0].content =
-    "<<<<<<< user\nuser\n=======\nnew\n>>>>>>> generator\n";
-  await savePlan(workspace_);
-  await init({ ...workspace_, packName: "coding" });
-  const report = await check(workspace_.target);
-  expect(report.errors).toContain("Unresolved conflict markers: AGENTS.md");
-  expect(report.errors.some((error) => error.startsWith("Drift:"))).toBe(false);
-});
+test(
+  "check rejects recorded conflict markers without relying on drift",
+  async () => {
+    const workspace_ = await workspace();
+    workspace_.plan.files[0].content =
+      "<<<<<<< user\nuser\n=======\nnew\n>>>>>>> generator\n";
+    await savePlan(workspace_);
+    await init({ ...workspace_, packName: "coding" });
+    const report = await check(workspace_.target);
+    expect(report.errors).toContain("Unresolved conflict markers: AGENTS.md");
+    expect(report.errors.some((error) => error.startsWith("Drift:"))).toBe(
+      false,
+    );
+  },
+  INTEGRATION_TIMEOUT_MS,
+);
 
-test("instruction budgets stop at the real git root through a path alias", async () => {
-  const workspace_ = await workspace();
-  const alias = join(workspace_.directory, "alias");
-  const storage = join(workspace_.directory, "storage");
-  await mkdir(storage);
-  await symlink(storage, alias);
-  workspace_.target = join(alias, "repo");
-  Bun.spawnSync(["git", "init", "-q", workspace_.target]);
-  await Bun.write(join(storage, "AGENTS.md"), "x".repeat(30_000));
-  workspace_.plan.profile.targets = ["codex"];
-  await savePlan(workspace_);
-  await init({ ...workspace_, packName: "coding" });
-  expect(await realpath(workspace_.target)).not.toBe(workspace_.target);
-  const result = run(workspace_.directory, [
-    "check",
-    "--target",
-    workspace_.target,
-  ]);
-  expect(result.exitCode, result.output).toBe(0);
-  expect(result.output).toContain(
-    `codex: ${Buffer.byteLength(fixture.files[0].content)}/32768 bytes`,
-  );
-});
+test(
+  "instruction budgets stop at the real git root through a path alias",
+  async () => {
+    const workspace_ = await workspace();
+    const alias = join(workspace_.directory, "alias");
+    const storage = join(workspace_.directory, "storage");
+    await mkdir(storage);
+    await symlink(storage, alias);
+    workspace_.target = join(alias, "repo");
+    Bun.spawnSync(["git", "init", "-q", workspace_.target]);
+    await Bun.write(join(storage, "AGENTS.md"), "x".repeat(30_000));
+    workspace_.plan.profile.targets = ["codex"];
+    await savePlan(workspace_);
+    await init({ ...workspace_, packName: "coding" });
+    expect(await realpath(workspace_.target)).not.toBe(workspace_.target);
+    const result = run(workspace_.directory, [
+      "check",
+      "--target",
+      workspace_.target,
+    ]);
+    expect(result.exitCode, result.output).toBe(0);
+    expect(result.output).toContain(
+      `codex: ${Buffer.byteLength(fixture.files[0].content)}/32768 bytes`,
+    );
+  },
+  INTEGRATION_TIMEOUT_MS,
+);
 
 test.each(["agents.md", "DOCS/guide.md", "docs/child.md/nested"])(
   "plan path case collisions reject %s",
@@ -332,26 +365,34 @@ test.skipIf(process.platform === "win32").each(["signal", "unexpected exit"])(
     expect(await Bun.file(path).text()).toBe(original);
     expect(await Bun.file(manifestPath).text()).toBe(manifestBefore);
   },
+  INTEGRATION_TIMEOUT_MS,
 );
 
-test("checker EACCES is reported and remaining checkers still run", async () => {
-  const workspace_ = await initialized();
-  const packageRoot = await packageCopy(workspace_.directory);
-  const packRoot = join(packageRoot, "packs/coding");
-  const path = join(packRoot, "pack.json");
-  const pack = await Bun.file(path).json();
-  pack.checkers = ["checkers/noexec.sh", "checkers/next.ts"];
-  await Bun.write(path, JSON.stringify(pack));
-  await Bun.write(join(packRoot, "checkers/noexec.sh"), "#!/bin/sh\nexit 0\n");
-  const executable = join(packRoot, "checkers/next.ts");
-  await Bun.write(executable, 'process.stdout.write("next checker ran\\n");');
-  await chmod(executable, 0o755);
-  const report = await check(workspace_.target, packageRoot);
-  expect(
-    report.errors.some((error) => error.includes("checkers/noexec.sh")),
-  ).toBe(true);
-  expect(report.messages).toContain("next checker ran");
-});
+test(
+  "checker EACCES is reported and remaining checkers still run",
+  async () => {
+    const workspace_ = await initialized();
+    const packageRoot = await packageCopy(workspace_.directory);
+    const packRoot = join(packageRoot, "packs/coding");
+    const path = join(packRoot, "pack.json");
+    const pack = await Bun.file(path).json();
+    pack.checkers = ["checkers/noexec.sh", "checkers/next.ts"];
+    await Bun.write(path, JSON.stringify(pack));
+    await Bun.write(
+      join(packRoot, "checkers/noexec.sh"),
+      "#!/bin/sh\nexit 0\n",
+    );
+    const executable = join(packRoot, "checkers/next.ts");
+    await Bun.write(executable, 'process.stdout.write("next checker ran\\n");');
+    await chmod(executable, 0o755);
+    const report = await check(workspace_.target, packageRoot);
+    expect(
+      report.errors.some((error) => error.includes("checkers/noexec.sh")),
+    ).toBe(true);
+    expect(report.messages).toContain("next checker ran");
+  },
+  INTEGRATION_TIMEOUT_MS,
+);
 
 test.each(["init", "update", "check"])(
   "pending marker gives recovery instructions for %s",
@@ -373,6 +414,7 @@ test.each(["init", "update", "check"])(
     );
     expect(await Bun.file(manifestPath).text()).toBe(original);
   },
+  INTEGRATION_TIMEOUT_MS,
 );
 
 test("interrupted apply leaves a plain marker", async () => {

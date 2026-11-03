@@ -1,0 +1,5 @@
+{
+  "rule": "raw-immutable",
+  "path": "raw/paper.txt",
+  "content": "Synthetic changed source; never user data.\n"
+}

@@ -1,7 +1,7 @@
-import { realpath, stat } from "node:fs/promises";
+import { lstat, realpath, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, extname, join, relative, resolve } from "node:path";
-import { matches, readHarness } from "./apply.ts";
+import { isOwnerPath, matches, readHarness } from "./apply.ts";
 import { diskFile, hasConflictMarkers, safePath } from "./files.ts";
 import { PACKAGE_ROOT } from "./packs.ts";
 import { parseMaintenance, type InstructionBudget } from "./schema.ts";
@@ -99,10 +99,13 @@ export async function check(
     messages.push("Manifest valid");
     for (const [path, record] of Object.entries(manifest.files)) {
       const current = await diskFile(await safePath(target, path));
-      if (!matches(current, record))
-        errors.push(
-          `Drift: ${path} (${current.kind === "missing" ? "deleted" : "changed"})`,
+      if (!matches(current, record)) {
+        const owner = record.mode === "owner" || isOwnerPath(path, packs);
+        const report = owner ? errors : messages;
+        report.push(
+          `Drift: ${path} (${current.kind === "missing" ? "deleted" : "changed"})${owner ? "; owner approval required" : "; managed file"}`,
         );
+      }
       if (current.kind !== "file") continue;
       if (hasConflictMarkers(current.content))
         errors.push(`Unresolved conflict markers: ${path}`);
@@ -166,9 +169,11 @@ export async function check(
         }
       }
       for (const checker of pack.manifest.checkers) {
-        const command = join(pack.root, checker);
         try {
-          const argv = [".ts", ".js", ".mjs"].includes(
+          const command = await safePath(await realpath(pack.root), checker);
+          if (!(await lstat(command)).isFile())
+            throw new Error("checker must be a regular file, not a symlink");
+          const argv = [".ts", ".js", ".mjs", ".cjs", ".mts", ".tsx"].includes(
             extname(command).toLowerCase(),
           )
             ? [process.execPath, command]

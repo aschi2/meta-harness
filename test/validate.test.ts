@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { join } from "node:path";
 import { parseHarnessManifest } from "../src/schema.ts";
+import { INTEGRATION_TIMEOUT_MS } from "./constants.ts";
 
 const root = join(import.meta.dir, "..");
 const cli = join(root, "src/cli.ts");
@@ -19,21 +20,29 @@ function runValidate(path: string) {
 }
 
 describe("validate CLI", () => {
-  test("passes on the real repository", () => {
-    const result = runValidate(root);
-    expect(result.exitCode).toBe(0);
-    expect(result.output).toContain("Validated 2 pack(s).");
-  });
+  test(
+    "passes on the real repository",
+    () => {
+      const result = runValidate(root);
+      expect(result.exitCode).toBe(0);
+      expect(result.output).toContain("Validated 4 pack(s).");
+    },
+    INTEGRATION_TIMEOUT_MS,
+  );
 
   test.each([
     ["bad-schema", "/parts: must be array"],
     ["missing-file", "referenced file does not exist: missing.md"],
     ["bad-date", "/researchTopics/0/reviewed: must match format"],
-  ])("rejects %s with a clear error", (fixture, message) => {
-    const result = runValidate(join(root, "test/fixtures", fixture));
-    expect(result.exitCode).toBe(1);
-    expect(result.output).toContain(message);
-  });
+  ])(
+    "rejects %s with a clear error",
+    (fixture, message) => {
+      const result = runValidate(join(root, "test/fixtures", fixture));
+      expect(result.exitCode).toBe(1);
+      expect(result.output).toContain(message);
+    },
+    INTEGRATION_TIMEOUT_MS,
+  );
 });
 
 test("every KB or pack path in skills, README, and AGENTS exists", async () => {

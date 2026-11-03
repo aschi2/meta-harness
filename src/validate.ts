@@ -1,6 +1,7 @@
+import { safePath } from "./files.ts";
 import { frontmatter } from "./frontmatter.ts";
 import { loadRole } from "./roles.ts";
-import { stat } from "node:fs/promises";
+import { lstat, realpath, stat } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import {
   compileProfileSchema,
@@ -40,7 +41,7 @@ export async function validate(path: string): Promise<ValidationResult> {
       try {
         const input: unknown = await Bun.file(manifestPath).json();
         const pack = parsePackManifest(input);
-        const packRoot = dirname(manifestPath);
+        const packRoot = await realpath(dirname(manifestPath));
         const references = new Set([
           ...pack.knowledge,
           ...pack.templates,
@@ -51,14 +52,19 @@ export async function validate(path: string): Promise<ValidationResult> {
           ...pack.researchTopics.map((topic) => topic.path),
         ]);
         for (const reference of references) {
-          const filePath = join(packRoot, reference);
-          const isFile = await stat(filePath).then(
+          const checker = pack.checkers.includes(reference);
+          const filePath = checker
+            ? await safePath(packRoot, reference)
+            : join(packRoot, reference);
+          const isFile = await (
+            checker ? lstat(filePath) : stat(filePath)
+          ).then(
             (info) => info.isFile(),
             () => false,
           );
           if (!isFile)
             errors.push(
-              `${manifestPath}: referenced file does not exist: ${reference}`,
+              `${manifestPath}: ${checker ? "referenced checker is not a regular file" : "referenced file does not exist"}: ${reference}`,
             );
         }
         if (await Bun.file(join(packRoot, pack.profileSchema)).exists()) {

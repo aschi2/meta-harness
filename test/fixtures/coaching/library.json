@@ -1,0 +1,23 @@
+{
+  "owner": "user",
+  "items": [
+    {
+      "id": "gentle",
+      "title": "Synthetic gentle practice",
+      "tags": ["low-load"],
+      "requiredEquipment": []
+    },
+    {
+      "id": "band",
+      "title": "Synthetic band practice",
+      "tags": ["resistance"],
+      "requiredEquipment": ["band"]
+    },
+    {
+      "id": "jump",
+      "title": "Synthetic excluded practice",
+      "tags": ["impact"],
+      "requiredEquipment": []
+    }
+  ]
+}

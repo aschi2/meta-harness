@@ -1,0 +1,66 @@
+{
+  "pack": "coaching",
+  "profile": {
+    "goals": ["Practice a general skill consistently."],
+    "constraints": {
+      "sessionMinutes": 20,
+      "sessionsPerWeek": 2,
+      "equipmentByLocation": {
+        "studio": ["band"],
+        "travel": []
+      }
+    },
+    "precautions": [
+      {
+        "providedBy": "user",
+        "excludedTags": ["impact"],
+        "notes": "Synthetic owner-provided exclusion."
+      }
+    ],
+    "trackingTool": "local session log"
+  },
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "parts": ["context"],
+      "template": "templates/AGENTS.md.template",
+      "variables": {
+        "goals": "Synthetic general skill practice.",
+        "tracking_tool": "local session log"
+      },
+      "mode": "managed"
+    },
+    {
+      "path": "library.json",
+      "parts": ["knowledge"],
+      "content": "{\n  \"owner\": \"user\",\n  \"items\": [\n    {\n      \"id\": \"gentle\",\n      \"title\": \"Synthetic gentle practice\",\n      \"tags\": [\n        \"low-load\"\n      ],\n      \"requiredEquipment\": []\n    },\n    {\n      \"id\": \"band\",\n      \"title\": \"Synthetic band practice\",\n      \"tags\": [\n        \"resistance\"\n      ],\n      \"requiredEquipment\": [\n        \"band\"\n      ]\n    },\n    {\n      \"id\": \"jump\",\n      \"title\": \"Synthetic excluded practice\",\n      \"tags\": [\n        \"impact\"\n      ],\n      \"requiredEquipment\": []\n    }\n  ]\n}\n",
+      "mode": "owner"
+    },
+    {
+      "path": "plan.json",
+      "parts": ["actions", "checks"],
+      "content": "{\n  \"weekOf\": \"2026-11-02\",\n  \"sessions\": [\n    {\n      \"date\": \"2026-11-02\",\n      \"location\": \"studio\",\n      \"items\": [\n        {\n          \"itemId\": \"band\",\n          \"durationMinutes\": 10\n        }\n      ]\n    },\n    {\n      \"date\": \"2026-11-04\",\n      \"location\": \"travel\",\n      \"items\": [\n        {\n          \"itemId\": \"gentle\",\n          \"durationMinutes\": 10\n        }\n      ]\n    }\n  ]\n}\n",
+      "mode": "seed"
+    },
+    {
+      "path": "logs/sessions.json",
+      "parts": ["loop"],
+      "content": "[]\n",
+      "mode": "seed"
+    },
+    {
+      "path": "profile.json",
+      "mode": "owner",
+      "parts": ["context"],
+      "content": "{\n  \"goals\": [\n    \"Practice a general skill consistently.\"\n  ],\n  \"constraints\": {\n    \"sessionMinutes\": 20,\n    \"sessionsPerWeek\": 2,\n    \"equipmentByLocation\": {\n      \"studio\": [\n        \"band\"\n      ],\n      \"travel\": []\n    }\n  },\n  \"precautions\": [\n    {\n      \"providedBy\": \"user\",\n      \"excludedTags\": [\n        \"impact\"\n      ],\n      \"notes\": \"Synthetic owner-provided exclusion.\"\n    }\n  ],\n  \"trackingTool\": \"local session log\"\n}\n"
+    }
+  ],
+  "symlinks": [
+    {
+      "path": "CLAUDE.md",
+      "target": "AGENTS.md",
+      "parts": ["context"],
+      "mode": "managed"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "rule": "frontmatter",
+  "path": "wiki/analysis/overview.md",
+  "content": "---\ntitle: [unterminated\n---\n# Synthetic invalid YAML\n"
+}

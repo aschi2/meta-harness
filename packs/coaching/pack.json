@@ -1,0 +1,30 @@
+{
+  "name": "coaching",
+  "version": "0.1.0",
+  "domain": "coaching",
+  "description": "Owner-controlled libraries and constraint-checked coaching plans, with fitness as a worked example.",
+  "parts": ["context", "knowledge", "actions", "checks", "loop"],
+  "knowledge": [
+    "knowledge/formats.md",
+    "knowledge/intake-and-progression.md",
+    "library.schema.json",
+    "plan.schema.json",
+    "CHANGELOG.md"
+  ],
+  "templates": ["templates/AGENTS.md.template"],
+  "checkers": ["checkers/plan-check.ts"],
+  "profileSchema": "profile.schema.json",
+  "researchTopics": [
+    {
+      "path": "knowledge/formats.md",
+      "reviewed": "2026-11-03"
+    },
+    {
+      "path": "knowledge/intake-and-progression.md",
+      "reviewed": "2026-11-03"
+    }
+  ],
+  "maintenance": ["maintenance/weekly-progress-review.md"],
+  "changelog": "CHANGELOG.md",
+  "ownerPaths": ["profile.json", "library.json"]
+}

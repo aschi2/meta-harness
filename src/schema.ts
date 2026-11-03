@@ -19,7 +19,7 @@ const isoDate = Type.Union([date, Type.String({ format: "date-time" })]);
 export const RelativeFileSchema = Type.String({
   minLength: 1,
   pattern:
-    "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)[^\\u0000]+$",
+    "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)(?!.*[. ](?:/|$))(?!.*(?:^|/)(?:[cC][oO][nN]|[pP][rR][nN]|[aA][uU][xX]|[nN][uU][lL]|[cC][oO][mM][1-9]|[lL][pP][tT][1-9])(?:[.]|/|$))[^\\u0000]+$",
 });
 export const RESERVED_PATH_PATTERN =
   "(?:^|/)\\.(?:[gG][iI][tT]|[hH][aA][rR][nN][eE][sS][sS])(?:/|$)";
@@ -30,6 +30,11 @@ const outputPath = Type.Intersect([
 const part = Type.Union(HARNESS_PARTS.map((part) => Type.Literal(part)));
 const parts = Type.Array(part, { minItems: 1, uniqueItems: true });
 const paths = Type.Array(RelativeFileSchema);
+const trackedMode = Type.Union([
+  Type.Literal("managed"),
+  Type.Literal("owner"),
+]);
+const fileMode = Type.Union([trackedMode, Type.Literal("seed")]);
 const partMap = Type.Object(
   {
     context: paths,
@@ -140,6 +145,7 @@ export const PackManifestSchema = Type.Object(
     targetsField: Type.Optional(text),
     instructionBudgets: Type.Optional(Type.Array(InstructionBudgetSchema)),
     maintenance: Type.Optional(paths),
+    ownerPaths: Type.Optional(Type.Array(outputPath, { uniqueItems: true })),
     researchTopics: Type.Array(
       Type.Object({ path: RelativeFileSchema, reviewed: date }),
     ),
@@ -158,13 +164,20 @@ export const HarnessManifestSchema = Type.Object(
       RelativeFileSchema,
       Type.Union([
         Type.Object(
-          { sha256: Type.String({ pattern: "^[a-fA-F0-9]{64}$" }) },
+          {
+            sha256: Type.String({ pattern: "^[a-fA-F0-9]{64}$" }),
+            mode: Type.Optional(trackedMode),
+          },
           { additionalProperties: false },
         ),
-        Type.Object({ symlink: text }, { additionalProperties: false }),
+        Type.Object(
+          { symlink: text, mode: Type.Optional(trackedMode) },
+          { additionalProperties: false },
+        ),
       ]),
       { additionalProperties: false },
     ),
+    seedFiles: Type.Optional(Type.Array(outputPath, { uniqueItems: true })),
     parts: Type.Optional(partMap),
     packs: Type.Optional(Type.Array(packVersion, { minItems: 1 })),
     deleted: Type.Optional(paths),
@@ -205,6 +218,7 @@ const planFile = Type.Union([
       content: Type.String(),
       parts,
       adopted: Type.Optional(Type.Boolean()),
+      mode: Type.Optional(fileMode),
     },
     { additionalProperties: false },
   ),
@@ -215,6 +229,7 @@ const planFile = Type.Union([
       variables: Type.Record(Type.String(), Type.String()),
       parts,
       adopted: Type.Optional(Type.Boolean()),
+      mode: Type.Optional(fileMode),
     },
     { additionalProperties: false },
   ),
@@ -231,6 +246,7 @@ export const PlanSchema = Type.Object(
           target: text,
           parts,
           adopted: Type.Optional(Type.Boolean()),
+          mode: Type.Optional(fileMode),
         },
         { additionalProperties: false },
       ),
@@ -248,6 +264,7 @@ export type HarnessParts = Type.Static<typeof partMap>;
 export type PackManifest = Type.Static<typeof PackManifestSchema>;
 export type HarnessManifest = Type.Static<typeof HarnessManifestSchema>;
 export type FileRecord = HarnessManifest["files"][string];
+export type FileMode = Type.Static<typeof fileMode>;
 export type Plan = Type.Static<typeof PlanSchema>;
 export type InstructionBudget = Type.Static<typeof InstructionBudgetSchema>;
 
@@ -273,10 +290,17 @@ export const parsePackManifest = parser(PackManifestSchema);
 const parseHarness = parser(HarnessManifestSchema);
 export function parseHarnessManifest(value: unknown): HarnessManifest {
   const manifest = parseHarness(value);
+  const seeds = new Set(manifest.seedFiles ?? []);
+  for (const path of seeds) {
+    if (Object.hasOwn(manifest.files, path))
+      throw new Error(`${path}: cannot belong to both files and seedFiles`);
+  }
   for (const [part, paths] of Object.entries(manifest.parts ?? {})) {
     for (const path of paths) {
-      if (!Object.hasOwn(manifest.files, path))
-        throw new Error(`parts.${part}: ${path} is absent from files`);
+      if (!Object.hasOwn(manifest.files, path) && !seeds.has(path))
+        throw new Error(
+          `parts.${part}: ${path} is absent from files and seedFiles`,
+        );
     }
   }
   return manifest;

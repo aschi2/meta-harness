@@ -1,0 +1,5 @@
+{
+  "rule": "orphan-page",
+  "path": "wiki/orphan.md",
+  "content": "---\n{}\n---\n# Synthetic unreachable page\n"
+}

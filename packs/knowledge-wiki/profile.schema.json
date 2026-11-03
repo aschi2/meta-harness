@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["sourceTypes", "ingestCadence", "approveEdits"],
+  "anyOf": [{ "required": ["domain"] }, { "required": ["topic"] }],
+  "properties": {
+    "domain": { "type": "string", "pattern": "\\S" },
+    "topic": { "type": "string", "pattern": "\\S" },
+    "sourceTypes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "\\S" }
+    },
+    "ingestCadence": {
+      "type": "string",
+      "description": "Informational cadence such as on-demand; does not register a schedule.",
+      "pattern": "\\S"
+    },
+    "approveEdits": {
+      "type": "boolean",
+      "description": "Require owner approval before applying wiki edits; maintenance always requires PR review."
+    }
+  },
+  "additionalProperties": true
+}

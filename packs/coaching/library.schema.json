@@ -1,0 +1,53 @@
+{
+  "type": "object",
+  "required": ["owner", "items"],
+  "properties": {
+    "owner": {
+      "anyOf": [
+        {
+          "type": "string",
+          "const": "user"
+        },
+        {
+          "type": "string",
+          "const": "clinician"
+        }
+      ]
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "tags", "requiredEquipment"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "title": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+            },
+            "uniqueItems": true
+          },
+          "requiredEquipment": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "\\S"
+            },
+            "uniqueItems": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

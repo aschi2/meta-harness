@@ -1,0 +1,48 @@
+{
+  "type": "object",
+  "required": ["weekOf", "sessions"],
+  "properties": {
+    "weekOf": {
+      "type": "string",
+      "format": "date"
+    },
+    "sessions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["date", "location", "items"],
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "location": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["itemId", "durationMinutes"],
+              "properties": {
+                "itemId": {
+                  "type": "string",
+                  "pattern": "\\S"
+                },
+                "durationMinutes": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              },
+              "additionalProperties": false
+            },
+            "minItems": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

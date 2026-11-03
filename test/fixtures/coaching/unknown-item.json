@@ -1,0 +1,25 @@
+{
+  "weekOf": "2026-11-02",
+  "sessions": [
+    {
+      "date": "2026-11-02",
+      "location": "studio",
+      "items": [
+        {
+          "itemId": "missing",
+          "durationMinutes": 10
+        }
+      ]
+    },
+    {
+      "date": "2026-11-04",
+      "location": "travel",
+      "items": [
+        {
+          "itemId": "gentle",
+          "durationMinutes": 10
+        }
+      ]
+    }
+  ]
+}

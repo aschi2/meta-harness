@@ -1,0 +1,82 @@
+{
+  "pack": "knowledge-wiki",
+  "profile": {
+    "domain": "synthetic-research",
+    "topic": "Synthetic topic",
+    "sourceTypes": ["paper", "article"],
+    "ingestCadence": "17 6 * * 1",
+    "approveEdits": true
+  },
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "parts": ["context", "actions", "checks", "loop"],
+      "template": "templates/AGENTS.md.template",
+      "variables": {
+        "topic": "Synthetic topic",
+        "domain": "synthetic-research",
+        "source_types": "paper, article",
+        "ingest_cadence": "17 6 * * 1",
+        "approve_edits": "true",
+        "checker_command": "bun /path/to/knowledge-wiki/checkers/wiki-lint.ts"
+      },
+      "mode": "managed"
+    },
+    {
+      "path": "wiki/index.md",
+      "parts": ["knowledge"],
+      "content": "---\ntitle: Synthetic topic\n---\n# Synthetic topic\n\n[Source](sources/example.md)\n",
+      "mode": "seed"
+    },
+    {
+      "path": "wiki/sources/example.md",
+      "parts": ["knowledge"],
+      "template": "templates/source.md.template",
+      "variables": {
+        "title_yaml": "\"Synthetic source\"",
+        "title": "Synthetic source",
+        "reviewed": "2026-11-03",
+        "source_date": "2026-11-02",
+        "raw_path_yaml": "\"raw/paper.txt\"",
+        "dated_cited_summary": "Synthetic example only. [Analysis](../analysis/overview.md)",
+        "limits_and_questions": "No real source claims."
+      },
+      "mode": "seed"
+    },
+    {
+      "path": "wiki/analysis/overview.md",
+      "parts": ["knowledge"],
+      "template": "templates/analysis.md.template",
+      "variables": {
+        "title_yaml": "\"Synthetic analysis\"",
+        "title": "Synthetic analysis",
+        "reviewed": "2026-11-03",
+        "raw_path_yaml": "\"raw/paper.txt\"",
+        "source_page_links": "[Synthetic source](../sources/example.md)",
+        "dated_cited_analysis": "Synthetic inference for testing only.",
+        "inferences_and_contradictions": "No factual inference is made."
+      },
+      "mode": "seed"
+    },
+    {
+      "path": "wiki/log.md",
+      "parts": ["loop"],
+      "content": "---\ntitle: Log\n---\n# Log\n\n## 2026-11-03 init\n\nSynthetic example only.\n",
+      "mode": "seed"
+    },
+    {
+      "path": "profile.json",
+      "mode": "owner",
+      "parts": ["context"],
+      "content": "{\n  \"domain\": \"synthetic-research\",\n  \"topic\": \"Synthetic topic\",\n  \"sourceTypes\": [\n    \"paper\",\n    \"article\"\n  ],\n  \"ingestCadence\": \"17 6 * * 1\",\n  \"approveEdits\": true\n}\n"
+    }
+  ],
+  "symlinks": [
+    {
+      "path": "CLAUDE.md",
+      "target": "AGENTS.md",
+      "parts": ["context"],
+      "mode": "managed"
+    }
+  ]
+}

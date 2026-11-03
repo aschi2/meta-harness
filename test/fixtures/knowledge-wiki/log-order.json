@@ -1,0 +1,5 @@
+{
+  "rule": "log-order",
+  "path": "wiki/log.md",
+  "content": "---\n{}\n---\n# Log\n\n## 2026-11-02 older\n\n## 2026-11-03 newer\n"
+}

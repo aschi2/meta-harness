@@ -8,15 +8,15 @@ An open-source utility for generating and maintaining agent harnesses for any do
 - **Checks:** deterministic validators for agent output.
 - **Loop:** corrections become checks, research refreshes knowledge, and updates are re-applied.
 
-A small TypeScript core on Bun handles deterministic file operations; agents keep judgment work. Domain packs supply knowledge, templates, and checkers. The first pack is coding, exposed through the existing Claude Code plugin skills; personal overlays stay outside this repository. The core provides pack validation, plan-driven init/update, harness checks, and portable maintenance runs.
+A small TypeScript core on Bun handles deterministic file operations; agents keep judgment work. Domain packs supply knowledge, templates, and checkers. Available domain packs are coding, knowledge-wiki and coaching, exposed through the Claude Code plugin skills; personal overlays stay outside this repository. The core provides pack validation, plan-driven init/update, harness checks, and portable maintenance runs.
 
 ## Skills
 
-| Skill               | What it does                                                                                                                                                                                |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/harness-new`      | Generate a harness for a repo (existing code or a PRD/app description). Profiles the repo, reads the KB, emits tailored files plus a `.harness/manifest.json` recording what was generated. |
-| `/harness-update`   | Re-apply current KB best practices to a previously generated harness. Uses the manifest to distinguish generated files from hand edits; never silently clobbers human changes.              |
-| `/harness-research` | Refresh the knowledge base: live web research against primary sources, written back to `packs/coding/kb/` as reviewable diffs with sources and dates.                                       |
+| Skill               | What it does                                                                                                                                                                   |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/harness-new`      | Select a domain pack, interview for its profile, and generate tailored files plus a `.harness/manifest.json` recording what was generated.                                     |
+| `/harness-update`   | Re-apply current KB best practices to a previously generated harness. Uses the manifest to distinguish generated files from hand edits; never silently clobbers human changes. |
+| `/harness-research` | Refresh the knowledge base: live web research against primary sources, written back to `packs/coding/kb/` as reviewable diffs with sources and dates.                          |
 
 ## Knowledge base
 
@@ -58,9 +58,9 @@ bun run src/cli.ts check --target /path/to/repo
 bun run schemas
 ```
 
-The package exposes the same CLI as `meta-harness`. Plans contain `pack`, `profile`, `files` (inline content or a declared template plus string variables), and `symlinks`; every entry names its `parts`. Existing unmanaged files require `adopted: true`. Omitted managed paths are retained; user-deleted files remain deleted. Text conflicts return non-zero with markers and advance the generator baseline, so a resolved file survives rerunning the same plan. Symlink/type conflicts remain untouched.
+The package exposes the same CLI as `meta-harness`. Plans contain `pack`, `profile`, `files` (inline content or a declared template plus string variables), and `symlinks`; every entry names its `parts`. File modes are `managed` (generator-owned, drift is informational and update merges), `seed` (written at init, then workflow-owned), or `owner` (constraints whose changed hashes require `meta-harness approve <path> --target <dir>`). Packs declare owner paths, which maintenance automatically protects. Existing unmanaged files require `adopted: true`. Omitted managed paths are retained; user-deleted files remain deleted. Text conflicts return non-zero with markers and advance the generator baseline, so a resolved file survives rerunning the same plan. Symlink/type conflicts remain untouched.
 
-Checks validate manifests and profiles, detect drift, enforce pack-declared instruction budgets, and execute declared checker files in the target directory. Checkers must be executable and return zero to pass. The coding pack distinguishes vendor limits from authoring policy; pi has no declared numeric budget.
+Checks validate manifests and profiles, report managed drift and fail unapproved owner drift, enforce pack-declared instruction budgets, and execute declared checker files in the target directory. TypeScript/JavaScript checkers run through the CLI runtime; other checker files must be executable. All must return zero to pass. The coding pack distinguishes vendor limits from authoring policy; pi has no declared numeric budget.
 
 Writes are atomic per file. An interrupted batch leaves `.harness/pending.json`; later commands refuse to proceed and print backup, restore, marker-removal and retry instructions. Automatic recovery is outside the current CLI.
 

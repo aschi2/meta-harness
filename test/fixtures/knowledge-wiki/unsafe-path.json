@@ -1,0 +1,5 @@
+{
+  "rule": "unsafe-path",
+  "path": "wiki/analysis/overview.md",
+  "content": "---\ntype: analysis\nraw: raw/paper.txt\n---\n[Escape](../../../outside.md)\n"
+}

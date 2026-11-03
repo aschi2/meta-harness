@@ -1,0 +1,84 @@
+{
+  "type": "object",
+  "required": ["goals", "constraints", "precautions", "trackingTool"],
+  "properties": {
+    "goals": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "\\S"
+      },
+      "minItems": 1
+    },
+    "constraints": {
+      "type": "object",
+      "required": ["sessionMinutes", "sessionsPerWeek", "equipmentByLocation"],
+      "properties": {
+        "sessionMinutes": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "sessionsPerWeek": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "equipmentByLocation": {
+          "type": "object",
+          "patternProperties": {
+            "\\S": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "\\S"
+              },
+              "uniqueItems": true
+            }
+          },
+          "minProperties": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "precautions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["providedBy", "excludedTags"],
+        "properties": {
+          "providedBy": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "user"
+              },
+              {
+                "type": "string",
+                "const": "clinician"
+              }
+            ]
+          },
+          "excludedTags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+            },
+            "uniqueItems": true,
+            "minItems": 1
+          },
+          "notes": {
+            "type": "string",
+            "pattern": "\\S"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "trackingTool": {
+      "type": "string",
+      "pattern": "\\S"
+    }
+  },
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

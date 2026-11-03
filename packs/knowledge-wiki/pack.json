@@ -1,0 +1,32 @@
+{
+  "name": "knowledge-wiki",
+  "version": "0.1.0",
+  "domain": "knowledge",
+  "description": "Topic-neutral source and analysis wiki with provenance checks and bounded maintenance.",
+  "parts": ["context", "knowledge", "actions", "checks", "loop"],
+  "knowledge": ["kb/wiki-workflow.md", "kb/wiki-lint.md", "kb/CHANGELOG.md"],
+  "templates": [
+    "templates/AGENTS.md.template",
+    "templates/source.md.template",
+    "templates/analysis.md.template"
+  ],
+  "checkers": ["checkers/wiki-lint.ts"],
+  "profileSchema": "profile.schema.json",
+  "researchTopics": [
+    {
+      "path": "kb/wiki-workflow.md",
+      "reviewed": "2026-11-03"
+    },
+    {
+      "path": "kb/wiki-lint.md",
+      "reviewed": "2026-11-03"
+    }
+  ],
+  "maintenance": [
+    "maintenance/inbox-ingest.md",
+    "maintenance/wiki-lint-fixer.md",
+    "maintenance/stale-page-review.md"
+  ],
+  "changelog": "kb/CHANGELOG.md",
+  "ownerPaths": ["profile.json"]
+}
