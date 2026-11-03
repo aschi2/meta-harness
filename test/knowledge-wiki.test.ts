@@ -1,7 +1,7 @@
 import { afterEach, expect, spyOn, test } from "bun:test";
 import * as filesystem from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, relative, sep } from "node:path";
 import {
   wikiLint,
   type Finding,
@@ -367,7 +367,8 @@ test("checker reads only wiki pages, never raw contents or excluded private tree
     expect(reader).toHaveBeenCalled();
     for (const [path] of reader.mock.calls) {
       expect(String(path)).toStartWith(join(target, "wiki"));
-      expect(String(path)).not.toMatch(
+      const harnessPath = relative(target, String(path)).split(sep).join("/");
+      expect(harnessPath).not.toMatch(
         /(?:^|\/)(?:raw|receipts|tmp|\.env[^/]*)(?:\/|$)/,
       );
     }
