@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["sizeTier", "languages", "targets"],
+  "properties": {
+    "sizeTier": { "type": "string", "minLength": 1 },
+    "languages": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["claude-code", "codex", "cursor", "pi"]
+      }
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,222 @@
+{
+  "type": "object",
+  "required": [
+    "pack",
+    "profile",
+    "files",
+    "symlinks"
+  ],
+  "properties": {
+    "pack": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "profile": {
+      "type": "object",
+      "patternProperties": {
+        "^.*$": {}
+      }
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "object",
+            "required": [
+              "path",
+              "content",
+              "parts"
+            ],
+            "properties": {
+              "path": {
+                "allOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)[^\\u0000]+$"
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^(?!.*(?:^|/)\\.(?:[gG][iI][tT]|[hH][aA][rR][nN][eE][sS][sS])(?:/|$)).*$"
+                  }
+                ]
+              },
+              "content": {
+                "type": "string"
+              },
+              "parts": {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "context"
+                    },
+                    {
+                      "type": "string",
+                      "const": "knowledge"
+                    },
+                    {
+                      "type": "string",
+                      "const": "actions"
+                    },
+                    {
+                      "type": "string",
+                      "const": "checks"
+                    },
+                    {
+                      "type": "string",
+                      "const": "loop"
+                    }
+                  ]
+                },
+                "minItems": 1,
+                "uniqueItems": true
+              },
+              "adopted": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "path",
+              "template",
+              "variables",
+              "parts"
+            ],
+            "properties": {
+              "path": {
+                "allOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)[^\\u0000]+$"
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^(?!.*(?:^|/)\\.(?:[gG][iI][tT]|[hH][aA][rR][nN][eE][sS][sS])(?:/|$)).*$"
+                  }
+                ]
+              },
+              "template": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)[^\\u0000]+$"
+              },
+              "variables": {
+                "type": "object",
+                "patternProperties": {
+                  "^.*$": {
+                    "type": "string"
+                  }
+                }
+              },
+              "parts": {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "context"
+                    },
+                    {
+                      "type": "string",
+                      "const": "knowledge"
+                    },
+                    {
+                      "type": "string",
+                      "const": "actions"
+                    },
+                    {
+                      "type": "string",
+                      "const": "checks"
+                    },
+                    {
+                      "type": "string",
+                      "const": "loop"
+                    }
+                  ]
+                },
+                "minItems": 1,
+                "uniqueItems": true
+              },
+              "adopted": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "symlinks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "target",
+          "parts"
+        ],
+        "properties": {
+          "path": {
+            "allOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)[^\\u0000]+$"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!.*(?:^|/)\\.(?:[gG][iI][tT]|[hH][aA][rR][nN][eE][sS][sS])(?:/|$)).*$"
+              }
+            ]
+          },
+          "target": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "parts": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "context"
+                },
+                {
+                  "type": "string",
+                  "const": "knowledge"
+                },
+                {
+                  "type": "string",
+                  "const": "actions"
+                },
+                {
+                  "type": "string",
+                  "const": "checks"
+                },
+                {
+                  "type": "string",
+                  "const": "loop"
+                }
+              ]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "adopted": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

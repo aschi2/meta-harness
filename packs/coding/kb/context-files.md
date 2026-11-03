@@ -1,6 +1,6 @@
 ---
 topic: context-files
-reviewed: 2026-09-02
+reviewed: 2026-11-03
 ---
 
 # Context files (AGENTS.md / CLAUDE.md / rules)
@@ -36,6 +36,15 @@ Only non-inferable content — things an agent cannot derive by reading the code
 - At most one "IMPORTANT" emphasis; emphasize everything and nothing stands out (https://code.claude.com/docs/en/best-practices).
 - If an agent keeps violating a rule that's written down, the file is too long — prune, don't add emphasis (https://code.claude.com/docs/en/best-practices).
 - HTML comments in CLAUDE.md are stripped before injection — usable for maintainer notes (https://code.claude.com/docs/en/memory).
+
+## Deterministic instruction budgets
+
+The coding pack declares budgets in `pack.json`; `meta-harness check` enforces them for the profile's selected targets.
+
+- **Codex:** the default `project_doc_max_bytes` is 32,768 bytes for discovered project instructions; discover from git root to cwd, choosing AGENTS.override.md before AGENTS.md (https://learn.chatgpt.com/docs/agent-configuration/agents-md, fetched 2026-11-03). This utility's budget includes the selected global instructions as well as that project chain [policy]. `CODEX_HOME` selects the global directory, defaulting to `~/.codex`.
+- **Claude Code:** startup instruction files larger than 4 MiB are skipped. Keep files under 200 lines as authoring guidance, distinct from that loading cap (https://code.claude.com/docs/en/memory#my-claudemd-is-too-large, fetched 2026-11-03). The coding pack enforces both the byte cap and a 200-line per-file authoring budget [policy]. MEMORY.md has separate limits; do not apply them to instruction files.
+- **Cursor:** keep rules under 500 lines; the official rules guide does not establish a numeric AGENTS.md loading cap (https://cursor.com/docs/rules#best-practices, fetched 2026-11-03). The coding pack applies 500 lines to AGENTS.md and rule files as authoring policy, not a vendor hard limit [policy].
+- **pi:** no numeric instruction-file budget is documented. The loader reads whole context files and the system prompt includes their contents (https://github.com/earendil-works/pi/blob/main/packages/coding-agent/src/core/resource-loader.ts, https://github.com/earendil-works/pi/blob/main/packages/coding-agent/src/core/system-prompt.ts, fetched 2026-11-03). Do not invent a hard limit.
 
 ## Structure by repo size
 

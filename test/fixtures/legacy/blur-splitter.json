@@ -1,0 +1,49 @@
+{
+  "metaHarnessVersion": "0.10.4",
+  "kbEntry": "2026-09-02 \u2014 full refresh through the steered/autonomous lens",
+  "generatedAt": "2026-09-17T18:17:41Z",
+  "profile": {
+    "sizeTier": "S",
+    "mode": "PRD",
+    "sourceFiles": 0,
+    "languages": ["go"],
+    "archetypes": ["services-infra"],
+    "targets": ["claude-code", "codex", "cursor", "pi"],
+    "plannedStack": {
+      "referenceImplementation": "AWM-DEV/LoadBalancerService",
+      "packageLayout": "single Go main package",
+      "dependencies": [
+        "confluent-kafka-go/v2",
+        "gocql",
+        "prometheus/client_golang",
+        "zerolog"
+      ],
+      "deployment": ["Docker", "Skaffold", "raw Kubernetes manifests"]
+    }
+  },
+  "files": {
+    "AGENTS.md": {
+      "sha256": "49d0a746615f80a9c9160b438db7ec077a877f7d8e4c2814344f944d58336e25"
+    },
+    "CLAUDE.md": {
+      "symlink": "AGENTS.md"
+    },
+    ".claude/settings.json": {
+      "sha256": "e66a9e1df45d7b6f3ff75c3e6fb0edf8f814e7e590f66b251aaff295edfd37af"
+    },
+    ".cursorignore": {
+      "sha256": "6d864540dade8978599fffd500fbbb9e1239d4e7fe32f866b70ddcbf1d14d4ab"
+    },
+    ".gitignore": {
+      "sha256": "df51deaf29de0d45318bf9a91012789c223f335004a032a1dc7e6588690a92e6"
+    }
+  },
+  "machineSetup": [
+    {
+      "what": "Codex workspace-write sandbox may write the Go module and build caches",
+      "where": "~/.codex/config.toml (symlink to ~/vimrc/stow/dot-codex/config.toml) [sandbox_workspace_write].writable_roots",
+      "rediscover": "go env GOMODCACHE GOCACHE",
+      "appliedAt": "2026-09-17"
+    }
+  ]
+}

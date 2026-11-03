@@ -1,0 +1,71 @@
+{
+  "metaHarnessVersion": "0.10.4",
+  "kbEntry": "2026-09-02 \u2014 full refresh through the steered/autonomous lens",
+  "generatedAt": "2026-10-30T09:40:08+00:00",
+  "profile": {
+    "sizeTier": "L",
+    "languages": ["swift", "javascript", "python", "shell"],
+    "targets": ["claude-code", "codex", "cursor", "pi"],
+    "sourceFiles": 386,
+    "sourceLines": 139038,
+    "sizeReason": "Monorepo: Apple app, RobodonoKit, OpenClaw plugin and relay; structure overrides file count."
+  },
+  "files": {
+    "AGENTS.md": {
+      "sha256": "313b9bd2a8bbc37da4fc48f6700966bc757df7095108b375ebbf94f01576c568"
+    },
+    "CLAUDE.md": {
+      "symlink": "AGENTS.md"
+    },
+    "App/AGENTS.md": {
+      "sha256": "0b7c6c52a1a4c050f58e73c2e0aa5d6e69f56af4070b4a6a1097fad476b0c57c"
+    },
+    "App/CLAUDE.md": {
+      "symlink": "AGENTS.md"
+    },
+    "RobodonoKit/AGENTS.md": {
+      "sha256": "c3705be1751e939a9c734220cbf1bf911c20434fe2b4b4700c1c46f2e491fad9"
+    },
+    "RobodonoKit/CLAUDE.md": {
+      "symlink": "AGENTS.md"
+    },
+    "plugin/AGENTS.md": {
+      "sha256": "00d43ab507630eae9d55a0cb3c8a242424eb2c531b10ffc1af8101efff9569bf"
+    },
+    "plugin/CLAUDE.md": {
+      "symlink": "AGENTS.md"
+    },
+    "relay/AGENTS.md": {
+      "sha256": "6dc263122057184e463112f346d9c657e5a83f76f41776f40eabf36b98b9d2ee"
+    },
+    "relay/CLAUDE.md": {
+      "symlink": "AGENTS.md"
+    },
+    "RobodonoUITests/AGENTS.md": {
+      "sha256": "d3e93d32e1de54aface1b9cb177e53d1464d6537106faf71ab91bbf056b968c5"
+    },
+    "RobodonoUITests/CLAUDE.md": {
+      "symlink": "AGENTS.md"
+    },
+    ".claude/settings.json": {
+      "sha256": "864482f0215170093a4a9fe350050d7609a3940049cd851b20a0c4107797bc94"
+    },
+    ".codex/config.toml": {
+      "sha256": "c73e8bece7ee8c99689e2c62932ffeb52126a24b55782659b5d9811bfdd253f7"
+    },
+    ".cursorignore": {
+      "sha256": "0f3b7d54f215380967ab06b8a5b9bbe2b6dc7451a446226e0d165221acbeb248"
+    },
+    ".cursorindexingignore": {
+      "sha256": "d11958f695674a97e7bf5645c13cba154d0631cd97931d98d4f232275b358b6f"
+    }
+  },
+  "machineSetup": [
+    {
+      "what": "Codex workspace-write sandbox may write the shared Swift, clang and npm caches, so delegates reuse build caches instead of rebuilding them",
+      "where": "~/.codex/config.toml [sandbox_workspace_write] writable_roots: ~/.npm, ~/.cache/clang/ModuleCache, ~/Library/Caches/org.swift.swiftpm, ~/Library/org.swift.swiftpm",
+      "rediscover": "npm config get cache; getconf DARWIN_USER_CACHE_DIR; ls -d ~/Library/Caches/org.swift.swiftpm ~/Library/org.swift.swiftpm ~/.cache/clang/ModuleCache",
+      "appliedAt": "2026-10-31"
+    }
+  ]
+}

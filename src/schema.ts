@@ -1,3 +1,7 @@
+import Type from "typebox";
+import Schema from "typebox/schema";
+
+export const JSON_SCHEMA_DRAFT = "https://json-schema.org/draft/2020-12/schema";
 export const HARNESS_PARTS = [
   "context",
   "knowledge",
@@ -5,260 +9,226 @@ export const HARNESS_PARTS = [
   "checks",
   "loop",
 ] as const;
+const text = Type.String({ pattern: "\\S" });
+const slug = Type.String({ pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$" });
+const version = Type.String({
+  pattern: "^\\d+\\.\\d+\\.\\d+(?:-[\\w.-]+)?(?:\\+[\\w.-]+)?$",
+});
+const date = Type.String({ format: "date" });
+const isoDate = Type.Union([date, Type.String({ format: "date-time" })]);
+export const RelativeFileSchema = Type.String({
+  minLength: 1,
+  pattern:
+    "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)[^\\u0000]+$",
+});
+export const RESERVED_PATH_PATTERN =
+  "(?:^|/)\\.(?:[gG][iI][tT]|[hH][aA][rR][nN][eE][sS][sS])(?:/|$)";
+const outputPath = Type.Intersect([
+  RelativeFileSchema,
+  Type.String({ pattern: `^(?!.*${RESERVED_PATH_PATTERN}).*$` }),
+]);
+const part = Type.Union(HARNESS_PARTS.map((part) => Type.Literal(part)));
+const parts = Type.Array(part, { minItems: 1, uniqueItems: true });
+const paths = Type.Array(RelativeFileSchema);
+const partMap = Type.Object(
+  {
+    context: paths,
+    knowledge: paths,
+    actions: paths,
+    checks: paths,
+    loop: paths,
+  },
+  { additionalProperties: false },
+);
+const packVersion = Type.Object({ name: slug, version });
+const profile = Type.Record(Type.String(), Type.Unknown());
+export const InstructionBudgetSchema = Type.Object(
+  {
+    target: text,
+    paths: Type.Array(RelativeFileSchema, { minItems: 1 }),
+    maximum: Type.Integer({ minimum: 1 }),
+    unit: Type.Union([Type.Literal("bytes"), Type.Literal("lines")]),
+    scope: Type.Union([Type.Literal("file"), Type.Literal("chain")]),
+    globalDirectory: Type.Optional(Type.String()),
+    globalEnvironment: Type.Optional(text),
+    globalPaths: Type.Optional(paths),
+    description: text,
+  },
+  { additionalProperties: false },
+);
 
-export type HarnessPart = (typeof HARNESS_PARTS)[number];
-export type HarnessParts = Record<HarnessPart, string[]>;
-export type PackVersion = { name: string; version: string };
-
-export interface PackManifest extends PackVersion {
-  domain: string;
-  description: string;
-  parts: HarnessPart[];
-  knowledge: string[];
-  templates: string[];
-  checkers: string[];
-  researchTopics: { path: string; reviewed: string }[];
-}
-
-export type FileRecord = { sha256: string } | { symlink: string };
-
-interface LegacyHarnessManifest {
-  metaHarnessVersion: string;
-  kbEntry?: string;
-  kbDate?: string;
-  generatedAt: string;
-  profile: { sizeTier: string; languages: string[]; targets: string[] };
-  files: Record<string, FileRecord>;
-  machineSetup?: {
-    what: string;
-    where: string;
-    rediscover: string;
-    appliedAt: string;
-  }[];
-  machineLocal?: { path: string; rediscover: string; generatedAt: string }[];
-  overlays?: { name: string; appliedAt: string }[];
-}
-
-// Existing field manifests remain valid; new manifests add both fields together.
-export type HarnessManifest = LegacyHarnessManifest &
-  (
-    | { parts: HarnessParts; packs: PackVersion[] }
-    | { parts?: never; packs?: never }
-  );
-
-function object(value: unknown, field: string): Record<string, unknown> {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw new Error(`${field}: expected an object`);
-  }
-  return value as Record<string, unknown>;
-}
-
-function string(value: unknown, field: string): string {
-  if (typeof value !== "string" || value.trim() === "") {
-    throw new Error(`${field}: expected a non-empty string`);
-  }
-  return value;
-}
-
-function array(value: unknown, field: string): unknown[] {
-  if (!Array.isArray(value)) throw new Error(`${field}: expected an array`);
-  return value;
-}
-
-function strings(value: unknown, field: string): string[] {
-  return array(value, field).map((entry, index) =>
-    string(entry, `${field}[${index}]`),
-  );
-}
-
-export function relativeFile(value: unknown, field: string): string {
-  const path = string(value, field);
-  const segments = path.split("/");
-  if (
-    path.includes("\\") ||
-    path.includes(":") ||
-    segments.some((segment) => ["", ".", ".."].includes(segment))
-  ) {
-    throw new Error(`${field}: expected a relative file path within its root`);
-  }
-  return path;
-}
-
-export function reviewedDate(value: unknown, field: string): string {
-  const date = string(value, field);
-  const timestamp = Date.parse(date);
-  if (
-    !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
-    !Number.isFinite(timestamp) ||
-    new Date(timestamp).toISOString().slice(0, 10) !== date
-  ) {
-    throw new Error(`${field}: expected a valid YYYY-MM-DD date, got ${date}`);
-  }
-  return date;
-}
-
-function isoDate(value: unknown, field: string): string {
-  const date = string(value, field);
-  reviewedDate(date.slice(0, 10), field);
-  if (!Number.isFinite(Date.parse(date))) {
-    throw new Error(`${field}: expected an ISO date`);
-  }
-  return date;
-}
-
-function packVersion(value: unknown, field: string): PackVersion {
-  const entry = object(value, field);
-  const name = string(entry.name, `${field}.name`);
-  const version = string(entry.version, `${field}.version`);
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name)) {
-    throw new Error(`${field}.name: expected a lowercase slug`);
-  }
-  if (!/^\d+\.\d+\.\d+(?:-[\w.-]+)?(?:\+[\w.-]+)?$/.test(version)) {
-    throw new Error(`${field}.version: expected a semantic version`);
-  }
-  return { name, version };
-}
-
-function harnessPart(value: unknown, field: string): HarnessPart {
-  const part = HARNESS_PARTS.find((part) => part === value);
-  if (!part)
-    throw new Error(`${field}: expected one of ${HARNESS_PARTS.join(", ")}`);
-  return part;
-}
-
-function filePaths(value: unknown, field: string): string[] {
-  return array(value, field).map((entry, index) =>
-    relativeFile(entry, `${field}[${index}]`),
-  );
-}
-
-export function parsePackManifest(value: unknown): PackManifest {
-  const entry = object(value, "pack");
-  const parts = array(entry.parts, "parts").map((part) =>
-    harnessPart(part, "parts"),
-  );
-  if (parts.length === 0 || new Set(parts).size !== parts.length) {
-    throw new Error("parts: expected at least one part, without duplicates");
-  }
-  const knowledge = filePaths(entry.knowledge, "knowledge");
-  const researchTopics = array(entry.researchTopics, "researchTopics").map(
-    (value, index) => {
-      const field = `researchTopics[${index}]`;
-      const topic = object(value, field);
-      const path = relativeFile(topic.path, `${field}.path`);
-      if (!knowledge.includes(path))
-        throw new Error(`${field}.path: must be listed in knowledge`);
-      return {
-        path,
-        reviewed: reviewedDate(topic.reviewed, `${field}.reviewed`),
-      };
-    },
-  );
-  return {
-    ...packVersion(entry, "pack"),
-    domain: string(entry.domain, "domain"),
-    description: string(entry.description, "description"),
+export const PackManifestSchema = Type.Object(
+  {
+    name: slug,
+    version,
+    domain: text,
+    description: text,
     parts,
-    knowledge,
-    templates: filePaths(entry.templates, "templates"),
-    checkers: filePaths(entry.checkers, "checkers"),
-    researchTopics,
+    knowledge: paths,
+    templates: paths,
+    checkers: paths,
+    profileSchema: RelativeFileSchema,
+    changelog: Type.Optional(RelativeFileSchema),
+    targetsField: Type.Optional(text),
+    instructionBudgets: Type.Optional(Type.Array(InstructionBudgetSchema)),
+    researchTopics: Type.Array(
+      Type.Object({ path: RelativeFileSchema, reviewed: date }),
+    ),
+  },
+  { $schema: JSON_SCHEMA_DRAFT },
+);
+
+export const HarnessManifestSchema = Type.Object(
+  {
+    metaHarnessVersion: text,
+    kbEntry: Type.Optional(text),
+    kbDate: Type.Optional(date),
+    generatedAt: isoDate,
+    profile,
+    files: Type.Record(
+      RelativeFileSchema,
+      Type.Union([
+        Type.Object(
+          { sha256: Type.String({ pattern: "^[a-fA-F0-9]{64}$" }) },
+          { additionalProperties: false },
+        ),
+        Type.Object({ symlink: text }, { additionalProperties: false }),
+      ]),
+      { additionalProperties: false },
+    ),
+    parts: Type.Optional(partMap),
+    packs: Type.Optional(Type.Array(packVersion, { minItems: 1 })),
+    deleted: Type.Optional(paths),
+    machineSetup: Type.Optional(
+      Type.Array(
+        Type.Object({
+          what: text,
+          where: text,
+          rediscover: text,
+          appliedAt: isoDate,
+        }),
+      ),
+    ),
+    machineLocal: Type.Optional(
+      Type.Array(
+        Type.Object({
+          path: RelativeFileSchema,
+          rediscover: text,
+          generatedAt: isoDate,
+        }),
+      ),
+    ),
+    overlays: Type.Optional(
+      Type.Array(Type.Object({ name: text, appliedAt: isoDate })),
+    ),
+  },
+  {
+    $schema: JSON_SCHEMA_DRAFT,
+    anyOf: [{ required: ["kbEntry"] }, { required: ["kbDate"] }],
+    dependentRequired: { parts: ["packs"], packs: ["parts"] },
+  },
+);
+
+const planFile = Type.Union([
+  Type.Object(
+    {
+      path: outputPath,
+      content: Type.String(),
+      parts,
+      adopted: Type.Optional(Type.Boolean()),
+    },
+    { additionalProperties: false },
+  ),
+  Type.Object(
+    {
+      path: outputPath,
+      template: RelativeFileSchema,
+      variables: Type.Record(Type.String(), Type.String()),
+      parts,
+      adopted: Type.Optional(Type.Boolean()),
+    },
+    { additionalProperties: false },
+  ),
+]);
+export const PlanSchema = Type.Object(
+  {
+    pack: slug,
+    profile,
+    files: Type.Array(planFile),
+    symlinks: Type.Array(
+      Type.Object(
+        {
+          path: outputPath,
+          target: text,
+          parts,
+          adopted: Type.Optional(Type.Boolean()),
+        },
+        { additionalProperties: false },
+      ),
+    ),
+  },
+  { $schema: JSON_SCHEMA_DRAFT, additionalProperties: false },
+);
+
+export type HarnessPart = Type.Static<typeof part>;
+export type HarnessParts = Type.Static<typeof partMap>;
+export type PackManifest = Type.Static<typeof PackManifestSchema>;
+export type HarnessManifest = Type.Static<typeof HarnessManifestSchema>;
+export type FileRecord = HarnessManifest["files"][string];
+export type Plan = Type.Static<typeof PlanSchema>;
+export type InstructionBudget = Type.Static<typeof InstructionBudgetSchema>;
+
+function parser<const Definition extends object>(definition: Definition) {
+  const validator = Schema.Compile(definition);
+  return (value: unknown): Type.Static<Definition> => {
+    const [valid, errors] = validator.Errors(value);
+    if (!valid)
+      throw new Error(
+        errors
+          .map((error) => `${error.instancePath || "/"}: ${error.message}`)
+          .join("; "),
+      );
+    return validator.Parse(value);
   };
 }
 
+export const parsePlan = parser(PlanSchema);
+export const parsePackManifest = parser(PackManifestSchema);
+const parseHarness = parser(HarnessManifestSchema);
 export function parseHarnessManifest(value: unknown): HarnessManifest {
-  const entry = object(value, "harness");
-  const profile = object(entry.profile, "profile");
-  const files: Record<string, FileRecord> = {};
-  for (const [path, value] of Object.entries(object(entry.files, "files"))) {
-    relativeFile(path, `files.${path}`);
-    const record = object(value, `files.${path}`);
-    if ("symlink" in record && !("sha256" in record)) {
-      files[path] = {
-        symlink: string(record.symlink, `files.${path}.symlink`),
-      };
-      continue;
-    }
-    const sha256 = string(record.sha256, `files.${path}.sha256`);
-    if ("symlink" in record || !/^[a-f\d]{64}$/i.test(sha256)) {
-      throw new Error(
-        `files.${path}: expected either a SHA-256 hash or a symlink target`,
-      );
-    }
-    files[path] = { sha256 };
-  }
-  if (entry.kbEntry === undefined && entry.kbDate === undefined) {
-    throw new Error("kbEntry: required (or legacy kbDate)");
-  }
-  const manifest: LegacyHarnessManifest = {
-    metaHarnessVersion: string(entry.metaHarnessVersion, "metaHarnessVersion"),
-    generatedAt: isoDate(entry.generatedAt, "generatedAt"),
-    profile: {
-      sizeTier: string(profile.sizeTier, "profile.sizeTier"),
-      languages: strings(profile.languages, "profile.languages"),
-      targets: strings(profile.targets, "profile.targets"),
-    },
-    files,
-  };
-  if (entry.kbEntry !== undefined)
-    manifest.kbEntry = string(entry.kbEntry, "kbEntry");
-  if (entry.kbDate !== undefined)
-    manifest.kbDate = reviewedDate(entry.kbDate, "kbDate");
-  if (entry.machineSetup !== undefined) {
-    manifest.machineSetup = array(entry.machineSetup, "machineSetup").map(
-      (value) => {
-        const setup = object(value, "machineSetup entry");
-        return {
-          what: string(setup.what, "machineSetup.what"),
-          where: string(setup.where, "machineSetup.where"),
-          rediscover: string(setup.rediscover, "machineSetup.rediscover"),
-          appliedAt: isoDate(setup.appliedAt, "machineSetup.appliedAt"),
-        };
-      },
-    );
-  }
-  if (entry.machineLocal !== undefined) {
-    manifest.machineLocal = array(entry.machineLocal, "machineLocal").map(
-      (value) => {
-        const setup = object(value, "machineLocal entry");
-        return {
-          path: relativeFile(setup.path, "machineLocal.path"),
-          rediscover: string(setup.rediscover, "machineLocal.rediscover"),
-          generatedAt: isoDate(setup.generatedAt, "machineLocal.generatedAt"),
-        };
-      },
-    );
-  }
-  if (entry.overlays !== undefined) {
-    manifest.overlays = array(entry.overlays, "overlays").map((value) => {
-      const overlay = object(value, "overlay");
-      return {
-        name: string(overlay.name, "overlays.name"),
-        appliedAt: isoDate(overlay.appliedAt, "overlays.appliedAt"),
-      };
-    });
-  }
-  if (entry.parts === undefined && entry.packs === undefined) return manifest;
-  const parts = object(entry.parts, "parts");
-  function partFiles(part: HarnessPart): string[] {
-    const paths = filePaths(parts[part], `parts.${part}`);
+  const manifest = parseHarness(value);
+  for (const [part, paths] of Object.entries(manifest.parts ?? {})) {
     for (const path of paths) {
-      if (!Object.hasOwn(files, path))
+      if (!Object.hasOwn(manifest.files, path))
         throw new Error(`parts.${part}: ${path} is absent from files`);
     }
-    return paths;
   }
-  return {
-    ...manifest,
-    parts: {
-      context: partFiles("context"),
-      knowledge: partFiles("knowledge"),
-      actions: partFiles("actions"),
-      checks: partFiles("checks"),
-      loop: partFiles("loop"),
-    },
-    packs: array(entry.packs, "packs").map((pack) =>
-      packVersion(pack, "packs entry"),
-    ),
-  };
+  return manifest;
+}
+export function relativeFile(value: unknown, field: string): string {
+  try {
+    return parser(RelativeFileSchema)(value);
+  } catch {
+    throw new Error(`${field}: expected a relative file path within its root`);
+  }
+}
+export function reviewedDate(value: unknown, field: string): string {
+  try {
+    return parser(date)(value);
+  } catch {
+    throw new Error(
+      `${field}: expected a valid YYYY-MM-DD date, got ${String(value)}`,
+    );
+  }
+}
+
+export function compileProfileSchema(value: unknown) {
+  const meta = Schema.Meta[JSON_SCHEMA_DRAFT];
+  if (!meta || !Schema.IsSchema(value) || !Schema.Compile(meta).Check(value)) {
+    throw new Error("Invalid profile JSON Schema (expected Draft 2020-12)");
+  }
+  const serialized = JSON.stringify(value);
+  if (/"\$ref"\s*:\s*"(?!#)/.test(serialized))
+    throw new Error("Profile schema references must be local (#/$defs)");
+  return Schema.Compile(value);
 }

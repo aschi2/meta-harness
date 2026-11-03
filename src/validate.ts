@@ -1,6 +1,10 @@
 import { stat } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { parsePackManifest, reviewedDate } from "./schema.ts";
+import {
+  compileProfileSchema,
+  parsePackManifest,
+  reviewedDate,
+} from "./schema.ts";
 
 export interface ValidationResult {
   manifests: string[];
@@ -39,6 +43,8 @@ export async function validate(path: string): Promise<ValidationResult> {
           ...pack.knowledge,
           ...pack.templates,
           ...pack.checkers,
+          pack.profileSchema,
+          ...(pack.changelog ? [pack.changelog] : []),
           ...pack.researchTopics.map((topic) => topic.path),
         ]);
         for (const reference of references) {
@@ -51,6 +57,11 @@ export async function validate(path: string): Promise<ValidationResult> {
             errors.push(
               `${manifestPath}: referenced file does not exist: ${reference}`,
             );
+        }
+        if (await Bun.file(join(packRoot, pack.profileSchema)).exists()) {
+          compileProfileSchema(
+            await Bun.file(join(packRoot, pack.profileSchema)).json(),
+          );
         }
         for (const topic of pack.researchTopics) {
           const file = Bun.file(join(packRoot, topic.path));

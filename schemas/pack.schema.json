@@ -1,0 +1,199 @@
+{
+  "type": "object",
+  "required": [
+    "name",
+    "version",
+    "domain",
+    "description",
+    "parts",
+    "knowledge",
+    "templates",
+    "checkers",
+    "profileSchema",
+    "researchTopics"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[\\w.-]+)?(?:\\+[\\w.-]+)?$"
+    },
+    "domain": {
+      "type": "string",
+      "pattern": "\\S"
+    },
+    "description": {
+      "type": "string",
+      "pattern": "\\S"
+    },
+    "parts": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "string",
+            "const": "context"
+          },
+          {
+            "type": "string",
+            "const": "knowledge"
+          },
+          {
+            "type": "string",
+            "const": "actions"
+          },
+          {
+            "type": "string",
+            "const": "checks"
+          },
+          {
+            "type": "string",
+            "const": "loop"
+          }
+        ]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "knowledge": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)[^\\u0000]+$"
+      }
+    },
+    "templates": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)[^\\u0000]+$"
+      }
+    },
+    "checkers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)[^\\u0000]+$"
+      }
+    },
+    "profileSchema": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)[^\\u0000]+$"
+    },
+    "changelog": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)[^\\u0000]+$"
+    },
+    "targetsField": {
+      "type": "string",
+      "pattern": "\\S"
+    },
+    "instructionBudgets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "target",
+          "paths",
+          "maximum",
+          "unit",
+          "scope",
+          "description"
+        ],
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "paths": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)[^\\u0000]+$"
+            },
+            "minItems": 1
+          },
+          "maximum": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "bytes"
+              },
+              {
+                "type": "string",
+                "const": "lines"
+              }
+            ]
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "file"
+              },
+              {
+                "type": "string",
+                "const": "chain"
+              }
+            ]
+          },
+          "globalDirectory": {
+            "type": "string"
+          },
+          "globalEnvironment": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "globalPaths": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)[^\\u0000]+$"
+            }
+          },
+          "description": {
+            "type": "string",
+            "pattern": "\\S"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "researchTopics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "reviewed"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)[^\\u0000]+$"
+          },
+          "reviewed": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

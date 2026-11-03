@@ -1,0 +1,191 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`fixture plan produces the expected tree, baselines, hashes, and symlink 1`] = `
+{
+  ".claude/settings.json": 
+"{
+  "//": "Generator: fill from verified repo commands; delete hooks whose tooling the repo lacks. Rules: kb/automation-surface.md. Remove this key before writing.",
+  "permissions": {
+    "allow": [
+      "Bash(bun test*)",
+      "Bash(bun run typecheck*)",
+      "Bash(git status*)",
+      "Bash(git diff*)"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(./secrets/**)",
+      "Read(dist/**)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "true",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun test || exit 2",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  }
+}
+"
+,
+  ".harness/baseline/.claude/settings.json": 
+"{
+  "//": "Generator: fill from verified repo commands; delete hooks whose tooling the repo lacks. Rules: kb/automation-surface.md. Remove this key before writing.",
+  "permissions": {
+    "allow": [
+      "Bash(bun test*)",
+      "Bash(bun run typecheck*)",
+      "Bash(git status*)",
+      "Bash(git diff*)"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(./secrets/**)",
+      "Read(dist/**)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "true",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun test || exit 2",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  }
+}
+"
+,
+  ".harness/baseline/AGENTS.md": 
+"# Fixture
+
+## Commands
+bun test
+
+## Conventions
+Use plain names.
+Keep changes scoped.
+Verify commands.
+
+## Notes
+Original note.
+"
+,
+  ".harness/baseline/docs/guide.md": 
+"# Guide
+
+Keep this.
+"
+,
+  ".harness/manifest.json": {
+    "files": {
+      ".claude/settings.json": {
+        "sha256": "e56008e32ab50321795e0f6bcaa1ed60ba5c58f490cc095bee10969cb1bb75e8",
+      },
+      "AGENTS.md": {
+        "sha256": "639200f1a325a1c73e535cea7dc76d5d102ae842bdd3db1e6bb8966b13026cca",
+      },
+      "CLAUDE.md": {
+        "symlink": "AGENTS.md",
+      },
+      "docs/guide.md": {
+        "sha256": "d1db7bec1eea3644ed20b9ff7b9bff02ad0ba3e48037664448b43071fcb6f8b0",
+      },
+    },
+    "generatedAt": "<timestamp>",
+    "kbEntry": "2026-11-03 — deterministic instruction budgets",
+    "metaHarnessVersion": "0.12.0",
+    "packs": [
+      {
+        "name": "coding",
+        "version": "0.2.0",
+      },
+    ],
+    "parts": {
+      "actions": [
+        ".claude/settings.json",
+      ],
+      "checks": [
+        ".claude/settings.json",
+      ],
+      "context": [
+        "AGENTS.md",
+        "CLAUDE.md",
+      ],
+      "knowledge": [
+        "docs/guide.md",
+      ],
+      "loop": [
+        ".claude/settings.json",
+      ],
+    },
+    "profile": {
+      "languages": [
+        "typescript",
+      ],
+      "sizeTier": "S",
+      "targets": [],
+    },
+  },
+  "AGENTS.md": 
+"# Fixture
+
+## Commands
+bun test
+
+## Conventions
+Use plain names.
+Keep changes scoped.
+Verify commands.
+
+## Notes
+Original note.
+"
+,
+  "CLAUDE.md": {
+    "symlink": "AGENTS.md",
+  },
+  "docs/guide.md": 
+"# Guide
+
+Keep this.
+"
+,
+}
+`;

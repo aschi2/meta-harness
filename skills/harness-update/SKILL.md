@@ -1,58 +1,35 @@
 ---
 name: harness-update
-description: Re-apply current best practices to an existing AI harness — upgrade AGENTS.md, memory/docs, navigation, skills/hooks to the latest knowledge base without clobbering hand edits. Use when the user asks to update, upgrade, refresh, or modernize a repo's harness/agent setup, or after /harness-research changes the KB.
+description: Interview and re-profile an existing harness, write a tailored update plan, and apply it through the meta-harness core while preserving user edits. Use to update, refresh, or modernize agent setup.
 ---
 
 # harness-update
 
-Bring a repo's harness up to the current knowledge base. The unit of safety is the manifest: it records what meta-harness generated, so hand edits are detectable and never silently lost.
+The agent decides what should change and writes the plan; the core owns classification, merging, file writes, hashes and baselines.
 
-Validate the installed coding pack before proceeding (requires Bun):
+## 1. Understand the change
+
+Read the target's `.harness/manifest.json`, current harness files and `${CLAUDE_PLUGIN_ROOT}/packs/coding/kb/CHANGELOG.md`. Find entries above `kbEntry` (or newer than legacy `kbDate`). No manifest: use `/harness-new` to adopt existing material explicitly.
+
+Re-profile as in `/harness-new`: stack, size, commands, target tools, existing conventions and PRD constraints. Interview only for missing decisions. If knowledge and profile are unchanged and the user requested no change, report that without applying a plan.
+
+Read current `packs/coding/kb/` topics and matching `packs/coding/kb/languages/*.md` and `packs/coding/kb/archetypes/*.md`. Judge which changes apply; explain contested choices and preserve tailored user intent.
+
+## 2. Write the new plan
+
+Use `${CLAUDE_PLUGIN_ROOT}/schemas/plan.schema.json` and the coding pack's `packs/coding/profile.schema.json`. Include the source `pack`, current `profile`, tailored `files` and `symlinks`, with each entry's five-part membership. Supply full desired generator content rather than editing target files yourself. Templates and variables follow `/harness-new`.
+
+Review the proposed changes with the user when requirements are ambiguous. Do not copy machine-specific paths from old manifests. Preserve the external ownership of overlays and machine setup; these are not target files to regenerate.
+
+Omitted managed paths remain untouched and tracked. User-deleted paths remain absent across later updates. New paths that collide with untracked files require deliberate `adopted: true` after reading them.
+
+## 3. Apply and review
 
 ```bash
-bun run "${CLAUDE_PLUGIN_ROOT}/src/cli.ts" validate "${CLAUDE_PLUGIN_ROOT}"
+bun run "${CLAUDE_PLUGIN_ROOT}/src/cli.ts" update --plan "<new-plan.json>" --target "<target-dir>"
+bun run "${CLAUDE_PLUGIN_ROOT}/src/cli.ts" check --target "<target-dir>"
 ```
 
-## Procedure
+The core classifies files and uses `git merge-file` for three-way text merges. Review its report and resulting artifacts. A conflict returns non-zero and writes markers for text conflicts; stop and present the conflict for a user decision. Do not silently resolve it or manually alter manifests/baselines. Feed the user's resolution into a revised plan; symlink/type conflicts are left untouched.
 
-### 1. Load state
-
-- Read `.harness/manifest.json` in the target repo (default: current working directory).
-- **No manifest?** This is adopt mode: the existing harness (any AGENTS.md/CLAUDE.md/.cursor/.claude material) is a hand-written baseline. Run the `/harness-new` procedure, folding existing content in as it prescribes, and write a first manifest. Everything below assumes a manifest exists.
-- Read `${CLAUDE_PLUGIN_ROOT}/packs/coding/kb/CHANGELOG.md` (newest-first). Find the manifest's `kbEntry` heading; every entry listed above it is in scope. (Older manifests may carry a `kbDate` instead — treat entries newer than that date as in scope.)
-
-### 2. Re-profile
-
-Re-run the profiling step from `/harness-new` (step 1). Size tier or stack may have crossed a KB threshold since generation — that alone can warrant changes even for KB topics that didn't move.
-
-If the KB scope is empty AND the profile matches the manifest's, say so and stop — do not churn files to no effect. Otherwise read every KB topic file (as in `/harness-new` step 2): the changelog scopes the update, but the topic files are the rules you generate from.
-
-### 3. Classify each manifest file
-
-For every path in `manifest.files`, compare disk state to the manifest (regular files: `shasum -a 256` vs recorded hash; symlinks: `readlink` vs recorded target):
-
-- **Unchanged** (matches): meta-harness owns it. Regenerate or patch freely per the updated KB.
-- **Hand-edited** (differs): a human touched it. Three-way merge using `.harness/baseline/<path>` as the base (`diff3`, or manual merge from base→ours/base→theirs diffs): apply KB-driven changes that don't collide with the hand edits; where they collide, show the conflict as a diff and ask the user rather than guessing. Never discard a hand edit without an explicit decision. If the baseline copy is missing, treat the whole file as a conflict and ask.
-- **Missing**: the user deleted it. Respect that — skip it, drop it from the manifest, and note it in the report. Do not resurrect deleted files.
-
-New files the updated KB calls for (that the old KB didn't) are generated as in `/harness-new`.
-
-### 3b. Re-apply machine setup
-
-For every entry in `manifest.machineSetup`: this is configuration living OUTSIDE the repo, so a clone on a new machine will not have it. Re-run the entry's `rediscover` command on THIS machine, compare the result with what the `where` file currently grants, and offer to write it if absent or stale. Never carry values forward from the manifest — they were derived on whichever machine ran last, and a stale absolute path fails silently rather than loudly.
-
-Ask before editing a user-level config; it is shared with the user's other projects. If a rediscover command no longer resolves, report it and change nothing rather than writing a guess.
-
-Manifests written by v0.7.0 may carry `machineLocal` (an in-repo gitignored file) instead. Treat it as the same intent, and offer to move it repo-external.
-
-### 4. Verify and re-manifest
-
-Run the `/harness-new` verify step over everything touched. Rewrite `.harness/manifest.json` with fresh hashes, the new `kbEntry`, and the re-profiled `profile`, and refresh `.harness/baseline/` copies to match the new generated state.
-
-Record the five-part file mapping and source pack versions as in `/harness-new` step 4, adding them when absent from an older manifest.
-
-Carry `manifest.overlays` through verbatim. Overlay-written files are outside this plugin's ownership: they are absent from `files` and from the baseline, so they are never classified, merged, or deleted by this procedure. Do not re-run overlays here — `/harness-new` step 5 offers them, an update does not.
-
-### 5. Report
-
-End with: what changed and which KB changelog entries drove each change, hand-edit conflicts and how each was resolved, files skipped as deleted, and profile-threshold changes (e.g. "repo crossed the navigation-index threshold; index config added").
+Report changed files, KB entries behind them, preserved deletions, conflicts, profile changes and check results. Do not re-run private overlays or modify shared machine configuration.

@@ -7,5 +7,6 @@
   "knowledge": ["missing.md"],
   "templates": [],
   "checkers": [],
-  "researchTopics": []
+  "researchTopics": [],
+  "profileSchema": "profile.schema.json"
 }

@@ -1,0 +1,31 @@
+{
+  "pack": "coding",
+  "profile": { "sizeTier": "S", "languages": ["typescript"], "targets": [] },
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "parts": ["context"],
+      "content": "# Fixture\n\n## Commands\nbun test\n\n## Conventions\nUse plain names.\nKeep changes scoped.\nVerify commands.\n\n## Notes\nOriginal note.\n"
+    },
+    {
+      "path": "docs/guide.md",
+      "parts": ["knowledge"],
+      "content": "# Guide\n\nKeep this.\n"
+    },
+    {
+      "path": ".claude/settings.json",
+      "parts": ["actions", "checks", "loop"],
+      "template": "templates/claude-settings.json.template",
+      "variables": {
+        "test_command": "bun test",
+        "lint_command": "bun run typecheck",
+        "generated_or_vendored_globs": "dist/**",
+        "format_touched_file_command": "true",
+        "cheap_check_suite_command": "bun test"
+      }
+    }
+  ],
+  "symlinks": [
+    { "path": "CLAUDE.md", "target": "AGENTS.md", "parts": ["context"] }
+  ]
+}

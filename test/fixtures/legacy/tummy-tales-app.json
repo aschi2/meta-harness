@@ -1,0 +1,39 @@
+{
+  "metaHarnessVersion": "0.6.0",
+  "kbEntry": "2026-08-27 \u2014 pstack conditional rules",
+  "generatedAt": "2026-08-28T17:13:28Z",
+  "profile": {
+    "sizeTier": "M",
+    "languages": ["dart", "typescript", "swift", "kotlin"],
+    "archetypes": ["mobile", "services-infra"],
+    "targets": ["claude-code", "codex", "cursor", "pi"]
+  },
+  "files": {
+    "AGENTS.md": {
+      "sha256": "cebefd06bb50c1cb0d10f895d4c7b545167c6c0f95bd3c30b705408fccad6ca6"
+    },
+    "CLAUDE.md": {
+      "symlink": "AGENTS.md"
+    },
+    "server/AGENTS.md": {
+      "sha256": "0ffa3e228de4f9ff3a2258e97767619dc4e108dbf112021814c7f161960ddc53"
+    },
+    "server/CLAUDE.md": {
+      "symlink": "AGENTS.md"
+    },
+    ".claude/settings.json": {
+      "sha256": "fbc1f8b7d7fb724f6aa128f24fd5cedc7d4228a86c19b3b319e95c929ad95e7f"
+    },
+    ".codex/config.toml": {
+      "sha256": "fc5d919251469eca5f7607ec68ac73384776caa2ae1de88f230d8ec18e14e317"
+    }
+  },
+  "machineSetup": [
+    {
+      "what": "Codex writable_roots for the Flutter toolchain (SDK cache, pub cache, telemetry)",
+      "where": "~/.codex/config.toml",
+      "rediscover": "flutter --version --machine | python3 -c \"import json,sys; print(json.load(sys.stdin)['flutterRoot'])\"",
+      "appliedAt": "2026-09-01"
+    }
+  ]
+}

@@ -26,12 +26,9 @@ describe("validate CLI", () => {
   });
 
   test.each([
-    ["bad-schema", "parts: expected an array"],
+    ["bad-schema", "/parts: must be array"],
     ["missing-file", "referenced file does not exist: missing.md"],
-    [
-      "bad-date",
-      "researchTopics[0].reviewed: expected a valid YYYY-MM-DD date",
-    ],
+    ["bad-date", "/researchTopics/0/reviewed: must match format"],
   ])("rejects %s with a clear error", (fixture, message) => {
     const result = runValidate(join(root, "test/fixtures", fixture));
     expect(result.exitCode).toBe(1);
@@ -127,5 +124,5 @@ test("harness schema preserves legacy state and validates additive fields", () =
       ...legacy,
       files: { "AGENTS.md": { sha256: "bad" } },
     }),
-  ).toThrow("SHA-256");
+  ).toThrow("sha256");
 });

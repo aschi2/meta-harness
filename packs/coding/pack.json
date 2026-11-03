@@ -1,6 +1,6 @@
 {
   "name": "coding",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "domain": "coding",
   "description": "Coding harness knowledge, templates, and research topics for AI development agents.",
   "parts": ["context", "knowledge", "actions", "checks", "loop"],
@@ -78,7 +78,7 @@
     },
     {
       "path": "kb/context-files.md",
-      "reviewed": "2026-09-02"
+      "reviewed": "2026-11-03"
     },
     {
       "path": "kb/harness-evals.md",
@@ -139,6 +139,46 @@
     {
       "path": "kb/testing-strategy.md",
       "reviewed": "2026-09-02"
+    }
+  ],
+  "profileSchema": "profile.schema.json",
+  "changelog": "kb/CHANGELOG.md",
+  "targetsField": "targets",
+  "instructionBudgets": [
+    {
+      "target": "codex",
+      "paths": ["AGENTS.override.md", "AGENTS.md"],
+      "maximum": 32768,
+      "unit": "bytes",
+      "scope": "chain",
+      "globalDirectory": ".codex",
+      "globalEnvironment": "CODEX_HOME",
+      "globalPaths": ["AGENTS.override.md", "AGENTS.md"],
+      "description": "Default project_doc_max_bytes: global instructions plus the git-root-to-cwd chain."
+    },
+    {
+      "target": "claude-code",
+      "paths": ["CLAUDE.md", "AGENTS.md"],
+      "maximum": 4194304,
+      "unit": "bytes",
+      "scope": "file",
+      "description": "Claude Code skips startup instruction files larger than 4 MiB."
+    },
+    {
+      "target": "claude-code",
+      "paths": ["CLAUDE.md", "AGENTS.md"],
+      "maximum": 200,
+      "unit": "lines",
+      "scope": "file",
+      "description": "Coding pack policy based on Anthropic guidance: keep instruction files under 200 lines."
+    },
+    {
+      "target": "cursor",
+      "paths": ["AGENTS.md", ".cursorrules", ".cursor/rules/*.mdc"],
+      "maximum": 500,
+      "unit": "lines",
+      "scope": "file",
+      "description": "Coding pack policy based on Cursor rule guidance; not a documented AGENTS.md loading cap."
     }
   ]
 }

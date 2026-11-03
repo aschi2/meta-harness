@@ -7,5 +7,6 @@
   "knowledge": [],
   "templates": [],
   "checkers": [],
-  "researchTopics": []
+  "researchTopics": [],
+  "profileSchema": "profile.schema.json"
 }

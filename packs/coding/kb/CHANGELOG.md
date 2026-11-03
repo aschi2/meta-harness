@@ -2,6 +2,10 @@
 
 Newest first — new entries go at the top, with a unique heading (date + short slug). `/harness-update` scopes upgrades to the entries above a manifest's recorded `kbEntry`.
 
+## 2026-11-03 — deterministic instruction budgets
+
+- context-files: distinguish Claude Code startup byte limits from authoring guidance; record Cursor guidance and the absence of a documented pi cap. Codex checking includes global instructions plus the applicable project chain as utility policy. The coding pack declares these budgets for deterministic `check`; generated harnesses should be rechecked.
+
 ## 2026-09-02 — full refresh through the steered/autonomous lens
 
 Every topic file re-researched with one added question per rule: does it differ between engineer-steered sessions and autonomous/unattended runs (`claude -p`, `codex exec`, CI, queue workers)? Where it does, the rule now carries both halves. README and the research skill encode the lens for future passes. **Changes what generated harnesses should contain for repos that run agents unattended** — run `/harness-update` on those.
