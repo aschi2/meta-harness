@@ -101,6 +101,35 @@ test.each([
   );
 });
 
+test("nested symlink targets use manifest paths through init, check and update", async () => {
+  const workspace_ = await workspace();
+  workspace_.plan.files.push({
+    path: "docs/AGENTS.md",
+    content: "Nested instructions\n",
+    parts: ["context"],
+  });
+  workspace_.plan.symlinks = [
+    { path: "CLAUDE.md", target: "docs/AGENTS.md", parts: ["context"] },
+    { path: "docs/CLAUDE.md", target: "AGENTS.md", parts: ["context"] },
+    { path: "docs/linked.md", target: "../CLAUDE.md", parts: ["context"] },
+  ];
+  await savePlan(workspace_);
+  expect(
+    symlinkDestination(workspace_.target, "CLAUDE.md", "docs/AGENTS.md"),
+  ).toBe("docs/AGENTS.md");
+  await init({ ...workspace_, packName: "coding" });
+  expect(await Bun.file(join(workspace_.target, "CLAUDE.md")).text()).toBe(
+    "Nested instructions\n",
+  );
+  const manifest = await Bun.file(
+    join(workspace_.target, ".harness/manifest.json"),
+  ).json();
+  expect(manifest.files["CLAUDE.md"]).toEqual({ symlink: "docs/AGENTS.md" });
+  expect((await check(workspace_.target)).errors).toEqual([]);
+  expect((await update(workspace_)).conflicts).toEqual([]);
+  expect((await check(workspace_.target)).errors).toEqual([]);
+});
+
 test.each(['pytest -k "not slow"', "echo {{x}}", "echo C:\\tools\nnext line"])(
   "JSON templates escape and preserve literal variable %s",
   async (value) => {

@@ -14,6 +14,10 @@ import { relativeFile, RESERVED_PATH_PATTERN } from "./schema.ts";
 
 const reservedPath = new RegExp(RESERVED_PATH_PATTERN);
 
+function toManifestPath(path: string): string {
+  return path.split(sep).join("/");
+}
+
 export type DiskFile =
   | { kind: "file"; content: string; mode: number }
   | { kind: "symlink"; target: string }
@@ -36,7 +40,7 @@ export async function diskFile(path: string): Promise<DiskFile> {
   });
   if (!info) return { kind: "missing" };
   if (info.isSymbolicLink())
-    return { kind: "symlink", target: await readlink(path) };
+    return { kind: "symlink", target: toManifestPath(await readlink(path)) };
   if (info.isFile())
     return {
       kind: "file",
@@ -69,12 +73,12 @@ export function symlinkDestination(
   target: string,
 ): string {
   const destination = resolve(root, dirname(path), target);
-  const withinRoot = relative(root, destination);
+  const withinRoot = toManifestPath(relative(root, destination));
   if (
     !withinRoot ||
     withinRoot === ".." ||
-    withinRoot.startsWith(`..${sep}`) ||
-    withinRoot.startsWith(`${sep}`)
+    withinRoot.startsWith("../") ||
+    withinRoot.startsWith("/")
   ) {
     throw new Error(
       `${path}: symlink target must stay inside the target directory`,
