@@ -1,0 +1,11 @@
+{
+  "name": "bad-schema",
+  "version": "0.1.0",
+  "domain": "fixture",
+  "description": "Invalid manifest shape.",
+  "parts": "knowledge",
+  "knowledge": [],
+  "templates": [],
+  "checkers": [],
+  "researchTopics": []
+}

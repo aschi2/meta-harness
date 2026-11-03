@@ -1,0 +1,11 @@
+{
+  "name": "missing-file",
+  "version": "0.1.0",
+  "domain": "fixture",
+  "description": "A referenced file is missing.",
+  "parts": ["knowledge"],
+  "knowledge": ["missing.md"],
+  "templates": [],
+  "checkers": [],
+  "researchTopics": []
+}

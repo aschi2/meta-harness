@@ -17,3 +17,6 @@ overlays/
 
 # OS noise
 .DS_Store
+
+# Bun dependencies
+node_modules/

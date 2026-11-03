@@ -1,8 +1,14 @@
 # meta-harness
 
-A Claude Code plugin that generates and upgrades AI development harnesses for any codebase or PRD, using a curated, refreshable knowledge base of current best practices.
+An open-source utility for generating and maintaining agent harnesses for any domain, from coding to personal finance and coaching. Every harness has five parts:
 
-A "harness" here means everything a repo carries so AI coding agents work well in it: the canonical instructions file (`AGENTS.md` + tool symlinks), a documentation and memory system, code navigation sized to the repo, skills/commands/hooks, permission settings, and per-tool config for Claude Code, Codex, Cursor, and pi.
+- **Context:** instructions, the user's profile, and preferences.
+- **Knowledge:** sources and a curated store.
+- **Actions:** skills and tools.
+- **Checks:** deterministic validators for agent output.
+- **Loop:** corrections become checks, research refreshes knowledge, and updates are re-applied.
+
+A small TypeScript core on Bun handles deterministic file operations; agents keep judgment work. Domain packs supply knowledge, templates, and checkers. The first pack is coding, exposed through the existing Claude Code plugin skills; personal overlays stay outside this repository. Phase 1 provides pack validation; the remaining core commands are planned.
 
 ## Skills
 
@@ -10,11 +16,11 @@ A "harness" here means everything a repo carries so AI coding agents work well i
 |---|---|
 | `/harness-new` | Generate a harness for a repo (existing code or a PRD/app description). Profiles the repo, reads the KB, emits tailored files plus a `.harness/manifest.json` recording what was generated. |
 | `/harness-update` | Re-apply current KB best practices to a previously generated harness. Uses the manifest to distinguish generated files from hand edits; never silently clobbers human changes. |
-| `/harness-research` | Refresh the knowledge base: live web research against primary sources, written back to `kb/` as reviewable diffs with sources and dates. |
+| `/harness-research` | Refresh the knowledge base: live web research against primary sources, written back to `packs/coding/kb/` as reviewable diffs with sources and dates. |
 
 ## Knowledge base
 
-`kb/` holds the best-practices corpus the generator reads. Every file carries frontmatter with a `reviewed:` date and inline source citations. `kb/CHANGELOG.md` records each research refresh, so "best practices changed" is an explicit, auditable event and any generated harness can be traced to the KB state that produced it.
+`packs/coding/kb/` holds the best-practices corpus the generator reads. Every file carries frontmatter with a `reviewed:` date and inline source citations. `packs/coding/kb/CHANGELOG.md` records each research refresh, so "best practices changed" is an explicit, auditable event and any generated harness can be traced to the KB state that produced it.
 
 Research precedence: verifiable, recent primary sources first; personal conventions only where research is silent or genuinely a matter of preference.
 
@@ -27,6 +33,8 @@ Users can keep private setup routines that layer on a generated harness — wiri
 No overlay directory means the step is skipped silently. Overlay bodies are user-authored and untrusted by this plugin.
 
 ## Install
+
+Bun 1.4.2 or later is required for pack validation.
 
 ```bash
 git clone https://github.com/aschi2/meta-harness.git

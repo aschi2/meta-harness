@@ -7,13 +7,19 @@ description: Re-apply current best practices to an existing AI harness — upgra
 
 Bring a repo's harness up to the current knowledge base. The unit of safety is the manifest: it records what meta-harness generated, so hand edits are detectable and never silently lost.
 
+Validate the installed coding pack before proceeding (requires Bun):
+
+```bash
+bun run "${CLAUDE_PLUGIN_ROOT}/src/cli.ts" validate "${CLAUDE_PLUGIN_ROOT}"
+```
+
 ## Procedure
 
 ### 1. Load state
 
 - Read `.harness/manifest.json` in the target repo (default: current working directory).
 - **No manifest?** This is adopt mode: the existing harness (any AGENTS.md/CLAUDE.md/.cursor/.claude material) is a hand-written baseline. Run the `/harness-new` procedure, folding existing content in as it prescribes, and write a first manifest. Everything below assumes a manifest exists.
-- Read `${CLAUDE_PLUGIN_ROOT}/kb/CHANGELOG.md` (newest-first). Find the manifest's `kbEntry` heading; every entry listed above it is in scope. (Older manifests may carry a `kbDate` instead — treat entries newer than that date as in scope.)
+- Read `${CLAUDE_PLUGIN_ROOT}/packs/coding/kb/CHANGELOG.md` (newest-first). Find the manifest's `kbEntry` heading; every entry listed above it is in scope. (Older manifests may carry a `kbDate` instead — treat entries newer than that date as in scope.)
 
 ### 2. Re-profile
 
@@ -42,6 +48,8 @@ Manifests written by v0.7.0 may carry `machineLocal` (an in-repo gitignored file
 ### 4. Verify and re-manifest
 
 Run the `/harness-new` verify step over everything touched. Rewrite `.harness/manifest.json` with fresh hashes, the new `kbEntry`, and the re-profiled `profile`, and refresh `.harness/baseline/` copies to match the new generated state.
+
+Record the five-part file mapping and source pack versions as in `/harness-new` step 4, adding them when absent from an older manifest.
 
 Carry `manifest.overlays` through verbatim. Overlay-written files are outside this plugin's ownership: they are absent from `files` and from the baseline, so they are never classified, merged, or deleted by this procedure. Do not re-run overlays here — `/harness-new` step 5 offers them, an update does not.
 

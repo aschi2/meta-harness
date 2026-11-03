@@ -1,0 +1,11 @@
+{
+  "name": "bad-date",
+  "version": "0.1.0",
+  "domain": "fixture",
+  "description": "A review date is not a real calendar date.",
+  "parts": ["knowledge"],
+  "knowledge": ["topic.md"],
+  "templates": [],
+  "checkers": [],
+  "researchTopics": [{ "path": "topic.md", "reviewed": "2026-02-30" }]
+}

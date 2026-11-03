@@ -1,0 +1,144 @@
+{
+  "name": "coding",
+  "version": "0.1.0",
+  "domain": "coding",
+  "description": "Coding harness knowledge, templates, and research topics for AI development agents.",
+  "parts": ["context", "knowledge", "actions", "checks", "loop"],
+  "knowledge": [
+    "kb/CHANGELOG.md",
+    "kb/README.md",
+    "kb/agent-friendly-code.md",
+    "kb/archetypes/cli-library.md",
+    "kb/archetypes/data-ml.md",
+    "kb/archetypes/mobile.md",
+    "kb/archetypes/services-infra.md",
+    "kb/archetypes/web-app.md",
+    "kb/automation-surface.md",
+    "kb/autonomous-operation.md",
+    "kb/code-navigation.md",
+    "kb/context-files.md",
+    "kb/harness-evals.md",
+    "kb/harness-targets.md",
+    "kb/languages/cpp.md",
+    "kb/languages/go.md",
+    "kb/languages/python.md",
+    "kb/languages/rust.md",
+    "kb/languages/typescript.md",
+    "kb/mcp-and-tools.md",
+    "kb/memory-and-docs.md",
+    "kb/model-routing.md",
+    "kb/runtime-feedback.md",
+    "kb/security.md",
+    "kb/spec-and-planning.md",
+    "kb/team-workflows.md",
+    "kb/testing-strategy.md"
+  ],
+  "templates": [
+    "templates/AGENTS.md.template",
+    "templates/agent-notes.md.template",
+    "templates/claude-settings.json.template"
+  ],
+  "checkers": [],
+  "researchTopics": [
+    {
+      "path": "kb/agent-friendly-code.md",
+      "reviewed": "2026-09-02"
+    },
+    {
+      "path": "kb/archetypes/cli-library.md",
+      "reviewed": "2026-08-24"
+    },
+    {
+      "path": "kb/archetypes/data-ml.md",
+      "reviewed": "2026-08-24"
+    },
+    {
+      "path": "kb/archetypes/mobile.md",
+      "reviewed": "2026-09-01"
+    },
+    {
+      "path": "kb/archetypes/services-infra.md",
+      "reviewed": "2026-08-27"
+    },
+    {
+      "path": "kb/archetypes/web-app.md",
+      "reviewed": "2026-09-01"
+    },
+    {
+      "path": "kb/automation-surface.md",
+      "reviewed": "2026-09-02"
+    },
+    {
+      "path": "kb/autonomous-operation.md",
+      "reviewed": "2026-09-02"
+    },
+    {
+      "path": "kb/code-navigation.md",
+      "reviewed": "2026-09-02"
+    },
+    {
+      "path": "kb/context-files.md",
+      "reviewed": "2026-09-02"
+    },
+    {
+      "path": "kb/harness-evals.md",
+      "reviewed": "2026-09-02"
+    },
+    {
+      "path": "kb/harness-targets.md",
+      "reviewed": "2026-09-02"
+    },
+    {
+      "path": "kb/languages/cpp.md",
+      "reviewed": "2026-08-24"
+    },
+    {
+      "path": "kb/languages/go.md",
+      "reviewed": "2026-08-24"
+    },
+    {
+      "path": "kb/languages/python.md",
+      "reviewed": "2026-08-24"
+    },
+    {
+      "path": "kb/languages/rust.md",
+      "reviewed": "2026-08-24"
+    },
+    {
+      "path": "kb/languages/typescript.md",
+      "reviewed": "2026-08-27"
+    },
+    {
+      "path": "kb/mcp-and-tools.md",
+      "reviewed": "2026-09-02"
+    },
+    {
+      "path": "kb/memory-and-docs.md",
+      "reviewed": "2026-09-02"
+    },
+    {
+      "path": "kb/model-routing.md",
+      "reviewed": "2026-09-02"
+    },
+    {
+      "path": "kb/runtime-feedback.md",
+      "reviewed": "2026-09-02"
+    },
+    {
+      "path": "kb/security.md",
+      "reviewed": "2026-09-02"
+    },
+    {
+      "path": "kb/spec-and-planning.md",
+      "reviewed": "2026-09-02"
+    },
+    {
+      "path": "kb/team-workflows.md",
+      "reviewed": "2026-09-02"
+    },
+    {
+      "path": "kb/testing-strategy.md",
+      "reviewed": "2026-09-02"
+    }
+  ]
+}

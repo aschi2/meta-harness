@@ -1,16 +1,23 @@
 # meta-harness — agent instructions
 
-This repo is a Claude Code plugin: three skills (`skills/*/SKILL.md`) plus the knowledge base (`kb/`) they read. `CLAUDE.md` is a symlink to this file.
+This repo contains a deterministic TypeScript core on Bun, domain packs, and a Claude Code plugin with three skills (`skills/*/SKILL.md`). `CLAUDE.md` is a symlink to this file.
 
 ## Layout
 
-- `skills/harness-new/`, `skills/harness-update/`, `skills/harness-research/` — the skills. Orchestration logic lives here; best-practice CONTENT lives in `kb/`. Never duplicate KB content into a SKILL.md.
-- `kb/` — the best-practices corpus. One topic per file, frontmatter with `reviewed:` date, claims cited inline as `(source URL, date)`. `kb/CHANGELOG.md` logs every refresh.
-- `templates/` — file templates the generator fills in. Templates carry `{{placeholders}}`; anything repo-specific is decided at generation time, not baked in.
+- `src/` — deterministic core and runtime manifest schemas; `test/` — Bun tests and broken fixtures.
+- `packs/coding/pack.json` — coding pack manifest; paths inside it are pack-relative.
+
+- `skills/harness-new/`, `skills/harness-update/`, `skills/harness-research/` — the skills. Orchestration logic lives here; best-practice CONTENT lives in `packs/coding/kb/`. Never duplicate KB content into a SKILL.md.
+- `packs/coding/kb/` — the best-practices corpus. One topic per file, frontmatter with `reviewed:` date, claims cited inline as `(source URL, date)`. `packs/coding/kb/CHANGELOG.md` logs every refresh.
+- `packs/coding/templates/` — file templates the generator fills in. Templates carry `{{placeholders}}`; anything repo-specific is decided at generation time, not baked in.
 
 ## Rules
 
 - KB edits must come from verifiable sources with dates, or be explicitly marked as preference/heuristic. No uncited "best practices".
-- When updating the KB, update `reviewed:` in the touched file's frontmatter and add an entry at the top of `kb/CHANGELOG.md` (newest-first) in the same change.
+- When updating the KB, update `reviewed:` in the touched file's frontmatter and add an entry at the top of `packs/coding/kb/CHANGELOG.md` (newest-first) in the same change.
 - The manifest schema (`.harness/manifest.json`, documented in `skills/harness-new/SKILL.md`) is a compatibility contract: `/harness-update` in the field depends on it. Extend it additively; never rename or repurpose existing fields.
-- Keep skills lean: a SKILL.md is a procedure, not an essay. Push reference material into `kb/` or the skill's own `references/` dir.
+- Keep skills lean: a SKILL.md is a procedure, not an essay. Push reference material into `packs/coding/kb/` or the skill's own `references/` dir.
+
+## Verification
+
+Run `bun install`, then `bun run typecheck`, `bun test`, and `bun run src/cli.ts validate .`. The validator searches the repository's `packs/` directory; an explicit pack directory or packs directory is also accepted.
