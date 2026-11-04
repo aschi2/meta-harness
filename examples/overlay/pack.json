@@ -1,0 +1,15 @@
+{
+  "name": "example-force-push-overlay",
+  "version": "1.0.0",
+  "domain": "general",
+  "description": "Example personal overlay rule pack.",
+  "parts": ["checks"],
+  "knowledge": [],
+  "templates": [],
+  "checkers": [],
+  "profileSchema": "profile.schema.json",
+  "overlay": true,
+  "commandRules": ["command-rules/no-force-push.ts"],
+  "ruleTests": ["rule-tests/no-force-push.json"],
+  "researchTopics": []
+}

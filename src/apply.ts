@@ -1,3 +1,7 @@
+import {
+  mergeHookSettings,
+  hookRegistrationPaths,
+} from "./hook-registration.ts";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { extname, join, resolve } from "node:path";
@@ -35,6 +39,7 @@ interface ApplyOptions {
   planPath: string;
   target: string;
   packageRoot?: string;
+  overlay?: string;
 }
 interface PreparedFile {
   path: string;
@@ -119,6 +124,48 @@ async function prepare(
       adopted: file.adopted ?? false,
       mode: mode(file),
     });
+  }
+  if (plan.hooks) {
+    for (const path of hookRegistrationPaths(plan.profile)) {
+      if (
+        plan.symlinks.some(
+          (link) => link.path.toLowerCase() === path.toLowerCase(),
+        )
+      )
+        throw new Error(`${path}: hook settings cannot be a planned symlink`);
+      const entry = files.find(
+        (file) => file.path.toLowerCase() === path.toLowerCase(),
+      );
+      if (entry && entry.path !== path)
+        throw new Error(
+          `${entry.path}: hook settings path conflicts with ${path}`,
+        );
+      if (entry && entry.mode !== "managed")
+        throw new Error(`${path}: hook settings must use managed mode`);
+      const current = await diskFile(await safePath(target, path));
+      if (current.kind === "symlink")
+        throw new Error(`${path}: hook settings must be a regular file`);
+      const harness = path.startsWith(".claude/") ? "claude" : "codex";
+      const content = mergeHookSettings(
+        entry?.content ??
+          (current.kind === "file" ? current.content : undefined),
+        harness,
+      );
+      if (entry) {
+        entry.content = content;
+        entry.parts = [
+          ...new Set([...entry.parts, "checks" as const, "loop" as const]),
+        ];
+      } else {
+        files.push({
+          path,
+          content,
+          adopted: false,
+          mode: "managed",
+          parts: ["checks", "loop"],
+        });
+      }
+    }
   }
   const symlinks: PreparedLink[] = [];
   for (const link of plan.symlinks) {
@@ -225,6 +272,7 @@ export async function init(
     options.planPath,
     packageRoot,
     options.packName,
+    options.overlay,
   );
   const prepared = await prepare(plan, pack, target);
   for (const entry of [...prepared.files, ...prepared.symlinks]) {
@@ -421,7 +469,12 @@ export async function update(options: ApplyOptions): Promise<ApplyReport> {
   const target = resolve(options.target);
   const packageRoot = options.packageRoot ?? PACKAGE_ROOT;
   const { manifest: old, packs } = await readHarness(target, packageRoot);
-  const { plan, pack } = await loadPlan(options.planPath, packageRoot);
+  const { plan, pack } = await loadPlan(
+    options.planPath,
+    packageRoot,
+    undefined,
+    options.overlay,
+  );
   const prepared = await prepare(plan, pack, target, [...packs, pack]);
   const manifest = await newManifest(pack, plan, packageRoot, old);
   const records = new Map(Object.entries(old.files));

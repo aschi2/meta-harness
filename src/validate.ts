@@ -47,24 +47,33 @@ export async function validate(path: string): Promise<ValidationResult> {
           ...pack.templates,
           ...pack.checkers,
           ...(pack.maintenance ?? []),
+          ...(pack.commandRules ?? []),
+          ...(pack.codeRules ?? []),
+          ...(pack.ruleTests ?? []),
           pack.profileSchema,
           ...(pack.changelog ? [pack.changelog] : []),
           ...pack.researchTopics.map((topic) => topic.path),
         ]);
         for (const reference of references) {
           const checker = pack.checkers.includes(reference);
-          const filePath = checker
+          const rule = [
+            ...(pack.commandRules ?? []),
+            ...(pack.codeRules ?? []),
+            ...(pack.ruleTests ?? []),
+          ].includes(reference);
+          const executable = checker || rule;
+          const filePath = executable
             ? await safePath(packRoot, reference)
             : join(packRoot, reference);
           const isFile = await (
-            checker ? lstat(filePath) : stat(filePath)
+            executable ? lstat(filePath) : stat(filePath)
           ).then(
             (info) => info.isFile(),
             () => false,
           );
           if (!isFile)
             errors.push(
-              `${manifestPath}: ${checker ? "referenced checker is not a regular file" : "referenced file does not exist"}: ${reference}`,
+              `${manifestPath}: ${checker ? "referenced checker is not a regular file" : rule ? "referenced rule is not a regular file" : "referenced file does not exist"}: ${reference}`,
             );
         }
         if (await Bun.file(join(packRoot, pack.profileSchema)).exists()) {

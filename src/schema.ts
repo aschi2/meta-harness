@@ -27,7 +27,7 @@ const outputPath = Type.Intersect([
   RelativeFileSchema,
   Type.String({ pattern: `^(?!.*${RESERVED_PATH_PATTERN}).*$` }),
 ]);
-const part = Type.Union(HARNESS_PARTS.map((part) => Type.Literal(part)));
+const part = Type.Enum(HARNESS_PARTS);
 const parts = Type.Array(part, { minItems: 1, uniqueItems: true });
 const paths = Type.Array(RelativeFileSchema);
 const trackedMode = Type.Union([
@@ -63,6 +63,43 @@ export const InstructionBudgetSchema = Type.Object(
 );
 
 const cron = Type.String({ pattern: "^[0-9*/,-]+(?: [0-9*/,-]+){4}$" });
+export const CommandRuleFixtureSchema = Type.Object(
+  {
+    ruleId: slug,
+    cases: Type.Array(
+      Type.Object(
+        {
+          event: Type.Literal("pre-tool-use"),
+          inputShape: Type.Union([
+            Type.Literal("claude"),
+            Type.Literal("codex"),
+          ]),
+          input: Type.Record(Type.String(), Type.Unknown()),
+          expected: Type.Union([Type.Literal("block"), Type.Null()]),
+          entrypoint: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+        },
+        { additionalProperties: false },
+      ),
+      {
+        minItems: 4,
+        allOf: ["claude", "codex"].flatMap((inputShape) =>
+          ["block", null].map((expected) => ({
+            contains: {
+              type: "object",
+              properties: {
+                inputShape: { const: inputShape },
+                expected: { const: expected },
+              },
+              required: ["inputShape", "expected"],
+            },
+          })),
+        ),
+      },
+    ),
+  },
+  { $schema: JSON_SCHEMA_DRAFT, additionalProperties: false },
+);
+
 export const RoleSchema = Type.Object(
   {
     id: slug,
@@ -145,6 +182,11 @@ export const PackManifestSchema = Type.Object(
     targetsField: Type.Optional(text),
     instructionBudgets: Type.Optional(Type.Array(InstructionBudgetSchema)),
     maintenance: Type.Optional(paths),
+    overlay: Type.Optional(Type.Boolean()),
+    commandRules: Type.Optional(paths),
+    codeRules: Type.Optional(paths),
+    ruleTests: Type.Optional(paths),
+    preferences: Type.Optional(profile),
     ownerPaths: Type.Optional(Type.Array(outputPath, { uniqueItems: true })),
     researchTopics: Type.Array(
       Type.Object({ path: RelativeFileSchema, reviewed: date }),
@@ -237,6 +279,7 @@ const planFile = Type.Union([
 export const PlanSchema = Type.Object(
   {
     pack: slug,
+    hooks: Type.Optional(Type.Boolean()),
     profile,
     files: Type.Array(planFile),
     symlinks: Type.Array(
@@ -282,6 +325,7 @@ function parser<const Definition extends object>(definition: Definition) {
   };
 }
 
+export const parseCommandRuleFixture = parser(CommandRuleFixtureSchema);
 export const parseMaintenanceUser = parser(MaintenanceUserSchema);
 export const parseMaintenance = parser(MaintenanceSchema);
 export const parseRole = parser(RoleSchema);

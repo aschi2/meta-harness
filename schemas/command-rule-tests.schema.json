@@ -1,0 +1,144 @@
+{
+  "type": "object",
+  "required": [
+    "ruleId",
+    "cases"
+  ],
+  "properties": {
+    "ruleId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "event",
+          "inputShape",
+          "input",
+          "expected"
+        ],
+        "properties": {
+          "event": {
+            "type": "string",
+            "const": "pre-tool-use"
+          },
+          "inputShape": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "claude"
+              },
+              {
+                "type": "string",
+                "const": "codex"
+              }
+            ]
+          },
+          "input": {
+            "type": "object",
+            "patternProperties": {
+              "^.*$": {}
+            }
+          },
+          "expected": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "block"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "entrypoint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 4,
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "inputShape": {
+                "const": "claude"
+              },
+              "expected": {
+                "const": "block"
+              }
+            },
+            "required": [
+              "inputShape",
+              "expected"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "inputShape": {
+                "const": "claude"
+              },
+              "expected": {
+                "const": null
+              }
+            },
+            "required": [
+              "inputShape",
+              "expected"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "inputShape": {
+                "const": "codex"
+              },
+              "expected": {
+                "const": "block"
+              }
+            },
+            "required": [
+              "inputShape",
+              "expected"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "inputShape": {
+                "const": "codex"
+              },
+              "expected": {
+                "const": null
+              }
+            },
+            "required": [
+              "inputShape",
+              "expected"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

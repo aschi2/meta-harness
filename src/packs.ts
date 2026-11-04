@@ -11,11 +11,16 @@ export async function loadPack(name: string, packageRoot = PACKAGE_ROOT) {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name))
     throw new Error("Pack name must be a lowercase slug");
   const root = join(packageRoot, "packs", name);
+  const pack = await loadPackAt(root);
+  if (pack.manifest.name !== name)
+    throw new Error(`Pack name ${pack.manifest.name} does not match ${name}`);
+  return pack;
+}
+
+export async function loadPackAt(root: string) {
   const manifest = parsePackManifest(
     await Bun.file(join(root, "pack.json")).json(),
   );
-  if (manifest.name !== name)
-    throw new Error(`Pack name ${manifest.name} does not match ${name}`);
   const profileSchema = await Bun.file(
     join(root, manifest.profileSchema),
   ).json();
@@ -28,9 +33,22 @@ export async function loadPlan(
   path: string,
   packageRoot = PACKAGE_ROOT,
   packName?: string,
+  overlay?: string,
 ) {
   const plan = parsePlan(await Bun.file(path).json());
+  const { overlayPreferences } = await import("./overlay.ts");
+  const preferences = await overlayPreferences(overlay);
+  const defaults = preferences.profile;
+  if (
+    typeof defaults === "object" &&
+    defaults !== null &&
+    !Array.isArray(defaults)
+  ) {
+    plan.profile = { ...defaults, ...plan.profile };
+  }
   const pack = await loadPack(packName ?? plan.pack, packageRoot);
+  if (pack.manifest.overlay)
+    throw new Error("Overlay packs cannot generate repository files");
   if (plan.pack !== pack.manifest.name)
     throw new Error(
       `Plan pack ${plan.pack} does not match ${pack.manifest.name}`,

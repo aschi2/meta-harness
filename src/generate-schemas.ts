@@ -6,9 +6,11 @@ import {
   RoleSchema,
   MaintenanceSchema,
   MaintenanceUserSchema,
+  CommandRuleFixtureSchema,
 } from "./schema.ts";
 
 for (const [name, schema] of Object.entries({
+  "command-rule-tests": CommandRuleFixtureSchema,
   pack: PackManifestSchema,
   harness: HarnessManifestSchema,
   plan: PlanSchema,

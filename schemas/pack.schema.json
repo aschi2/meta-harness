@@ -32,27 +32,12 @@
     "parts": {
       "type": "array",
       "items": {
-        "anyOf": [
-          {
-            "type": "string",
-            "const": "context"
-          },
-          {
-            "type": "string",
-            "const": "knowledge"
-          },
-          {
-            "type": "string",
-            "const": "actions"
-          },
-          {
-            "type": "string",
-            "const": "checks"
-          },
-          {
-            "type": "string",
-            "const": "loop"
-          }
+        "enum": [
+          "context",
+          "knowledge",
+          "actions",
+          "checks",
+          "loop"
         ]
       },
       "minItems": 1,
@@ -179,6 +164,39 @@
         "type": "string",
         "minLength": 1,
         "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)(?!.*[. ](?:/|$))(?!.*(?:^|/)(?:[cC][oO][nN]|[pP][rR][nN]|[aA][uU][xX]|[nN][uU][lL]|[cC][oO][mM][1-9]|[lL][pP][tT][1-9])(?:[.]|/|$))[^\\u0000]+$"
+      }
+    },
+    "overlay": {
+      "type": "boolean"
+    },
+    "commandRules": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)(?!.*[. ](?:/|$))(?!.*(?:^|/)(?:[cC][oO][nN]|[pP][rR][nN]|[aA][uU][xX]|[nN][uU][lL]|[cC][oO][mM][1-9]|[lL][pP][tT][1-9])(?:[.]|/|$))[^\\u0000]+$"
+      }
+    },
+    "codeRules": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)(?!.*[. ](?:/|$))(?!.*(?:^|/)(?:[cC][oO][nN]|[pP][rR][nN]|[aA][uU][xX]|[nN][uU][lL]|[cC][oO][mM][1-9]|[lL][pP][tT][1-9])(?:[.]|/|$))[^\\u0000]+$"
+      }
+    },
+    "ruleTests": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[/]$)(?!.*[. ](?:/|$))(?!.*(?:^|/)(?:[cC][oO][nN]|[pP][rR][nN]|[aA][uU][xX]|[nN][uU][lL]|[cC][oO][mM][1-9]|[lL][pP][tT][1-9])(?:[.]|/|$))[^\\u0000]+$"
+      }
+    },
+    "preferences": {
+      "type": "object",
+      "patternProperties": {
+        "^.*$": {}
       }
     },
     "ownerPaths": {

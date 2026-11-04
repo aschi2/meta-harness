@@ -3,7 +3,14 @@ import { homedir } from "node:os";
 import { dirname, extname, join, relative, resolve } from "node:path";
 import { isOwnerPath, matches, readHarness } from "./apply.ts";
 import { diskFile, hasConflictMarkers, safePath } from "./files.ts";
-import { PACKAGE_ROOT } from "./packs.ts";
+import { PACKAGE_ROOT, loadPack } from "./packs.ts";
+import { harnessRoot, type RuleOptions } from "./rule-sources.ts";
+import { overlayPreferences } from "./overlay.ts";
+import {
+  changedFiles,
+  scanCodeRules,
+  subprocessTimeout,
+} from "./code-rules.ts";
 import { parseMaintenance, type InstructionBudget } from "./schema.ts";
 
 const CHECKER_TIMEOUT_MS = 30_000;
@@ -39,14 +46,12 @@ async function existingInstructions(
 async function instructionChain(
   target: string,
   budget: InstructionBudget,
+  deadline?: number,
 ): Promise<string[]> {
-  const result = Bun.spawnSync([
-    "git",
-    "-C",
-    target,
-    "rev-parse",
-    "--show-toplevel",
-  ]);
+  const result = Bun.spawnSync(
+    ["git", "-C", target, "rev-parse", "--show-toplevel"],
+    { timeout: subprocessTimeout(deadline), killSignal: "SIGKILL" },
+  );
   const canonicalTarget = await realpath(target);
   const root =
     result.exitCode === 0
@@ -87,9 +92,134 @@ async function measure(
   return content.split("\n").length - Number(content.endsWith("\n"));
 }
 
+async function measureBudgets(
+  target: string,
+  budgets: InstructionBudget[],
+  files: string[],
+  changed?: Set<string>,
+  deadline?: number,
+): Promise<CheckReport> {
+  const messages: string[] = [];
+  const errors: string[] = [];
+  for (const budget of budgets) {
+    if (budget.scope === "chain") {
+      const paths = await instructionChain(target, budget, deadline);
+      if (changed && !paths.some((path) => changed.has(resolve(path))))
+        continue;
+      const sizes = await Promise.all(
+        paths.map((path) => measure(path, budget.unit)),
+      );
+      const size = sizes.reduce((sum, size) => sum + size, 0);
+      const summary = `${budget.target}: ${size}/${budget.maximum} ${budget.unit} (global + instruction chain)`;
+      messages.push(summary);
+      if (size > budget.maximum)
+        errors.push(`Over budget: ${summary}; ${paths.join(", ")}`);
+      continue;
+    }
+    const directories = new Set([
+      target,
+      ...files.map((path) => join(target, dirname(path))),
+    ]);
+    for (const directory of directories) {
+      for (const path of await existingInstructions(
+        directory,
+        budget.paths,
+        false,
+      )) {
+        if (changed && !changed.has(resolve(path))) continue;
+        const size = await measure(path, budget.unit);
+        if (size > budget.maximum)
+          errors.push(
+            `Over budget: ${budget.target} ${relative(target, path)} ${size}/${budget.maximum} ${budget.unit}; ${budget.description}`,
+          );
+      }
+    }
+  }
+  return { messages, errors };
+}
+
+export async function instructionBudgetReport(
+  cwd: string,
+  packageRoot = PACKAGE_ROOT,
+  options: {
+    changedOnly?: boolean;
+    harness?: "claude" | "codex";
+    overlay?: string;
+    deadline?: number;
+  } = {},
+): Promise<CheckReport> {
+  const target = await realpath(cwd);
+  const root = await harnessRoot(target);
+  if (options.changedOnly) {
+    let codexTarget = false;
+    if (root) {
+      const { manifest, packs } = await readHarness(root, packageRoot);
+      codexTarget = packs.some((pack) => {
+        const targets = manifest.profile[pack.manifest.targetsField ?? ""];
+        return Array.isArray(targets) && targets.includes("codex");
+      });
+    }
+    try {
+      const preferences = await overlayPreferences(options.overlay);
+      codexTarget ||= preferences.instructionBudget === true;
+    } catch {
+      // Overlay diagnostics are reported separately; a broken overlay cannot disable a harness budget.
+    }
+    if (!codexTarget) return { messages: [], errors: [] };
+    const git = Bun.spawnSync(
+      ["git", "-C", target, "rev-parse", "--show-toplevel"],
+      {
+        timeout: subprocessTimeout(options.deadline),
+        killSignal: "SIGKILL",
+      },
+    );
+    if (git.exitCode !== 0) return { messages: [], errors: [] };
+    const gitRoot = await realpath(git.stdout.toString().trim());
+    const changed = new Set(
+      (await changedFiles(gitRoot, options.deadline)).map((path) =>
+        resolve(gitRoot, path),
+      ),
+    );
+    const coding = await loadPack("coding", packageRoot);
+    const budget = coding.manifest.instructionBudgets?.find(
+      (budget) => budget.target === "codex" && budget.scope === "chain",
+    );
+    if (!budget) return { messages: [], errors: [] };
+    return measureBudgets(target, [budget], [], changed, options.deadline);
+  }
+  if (!root) return { messages: [], errors: [] };
+  const { manifest, packs } = await readHarness(root, packageRoot);
+  const messages: string[] = [];
+  const budgets: InstructionBudget[] = [];
+  for (const pack of packs) {
+    const selected = manifest.profile[pack.manifest.targetsField ?? ""];
+    const targets: unknown[] = Array.isArray(selected) ? selected : [];
+    for (const target of targets) {
+      if (
+        !(pack.manifest.instructionBudgets ?? []).some(
+          (budget) => budget.target === target,
+        )
+      )
+        messages.push(`${target}: no numeric instruction budget declared`);
+    }
+    budgets.push(
+      ...(pack.manifest.instructionBudgets ?? []).filter((budget) =>
+        targets.includes(budget.target),
+      ),
+    );
+  }
+  const report = await measureBudgets(
+    target,
+    budgets,
+    Object.keys(manifest.files),
+  );
+  return { messages: [...messages, ...report.messages], errors: report.errors };
+}
+
 export async function check(
   targetPath: string,
   packageRoot = PACKAGE_ROOT,
+  options: RuleOptions = {},
 ): Promise<CheckReport> {
   const target = resolve(targetPath);
   const messages: string[] = [];
@@ -124,50 +254,6 @@ export async function check(
         errors.push(
           `Profile behind pack ${pack.manifest.version} (${pack.manifest.name}): run update`,
         );
-      const selected = manifest.profile[pack.manifest.targetsField ?? ""];
-      const targets = Array.isArray(selected) ? selected : [];
-      for (const target of targets) {
-        if (
-          !(pack.manifest.instructionBudgets ?? []).some(
-            (budget) => budget.target === target,
-          )
-        )
-          messages.push(`${target}: no numeric instruction budget declared`);
-      }
-      for (const budget of pack.manifest.instructionBudgets ?? []) {
-        if (!targets.includes(budget.target)) continue;
-        if (budget.scope === "chain") {
-          const paths = await instructionChain(target, budget);
-          const sizes = await Promise.all(
-            paths.map((path) => measure(path, budget.unit)),
-          );
-          const size = sizes.reduce((sum, size) => sum + size, 0);
-          const summary = `${budget.target}: ${size}/${budget.maximum} ${budget.unit} (global + instruction chain)`;
-          messages.push(summary);
-          if (size > budget.maximum)
-            errors.push(`Over budget: ${summary}; ${paths.join(", ")}`);
-          continue;
-        }
-        const directories = new Set([
-          target,
-          ...Object.keys(manifest.files).map((path) =>
-            join(target, dirname(path)),
-          ),
-        ]);
-        for (const directory of directories) {
-          for (const path of await existingInstructions(
-            directory,
-            budget.paths,
-            false,
-          )) {
-            const size = await measure(path, budget.unit);
-            if (size > budget.maximum)
-              errors.push(
-                `Over budget: ${budget.target} ${relative(target, path)} ${size}/${budget.maximum} ${budget.unit}; ${budget.description}`,
-              );
-          }
-        }
-      }
       for (const checker of pack.manifest.checkers) {
         try {
           const command = await safePath(await realpath(pack.root), checker);
@@ -194,6 +280,12 @@ export async function check(
         }
       }
     }
+    const budget = await instructionBudgetReport(target, packageRoot);
+    messages.push(...budget.messages);
+    errors.push(...budget.errors);
+    const scan = await scanCodeRules(target, { ...options, packageRoot });
+    messages.push(...scan.messages);
+    errors.push(...scan.errors, ...scan.failures);
     if (errors.length === 0) messages.push("Check passed");
   } catch (error) {
     errors.push(error instanceof Error ? error.message : String(error));

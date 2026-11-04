@@ -1,0 +1,57 @@
+{
+  "ruleId": "no-force-push",
+  "cases": [
+    {
+      "event": "pre-tool-use",
+      "inputShape": "claude",
+      "input": {
+        "tool_name": "Bash",
+        "cwd": "/tmp",
+        "tool_input": {
+          "command": "git push --force origin topic",
+          "cwd": "/tmp"
+        }
+      },
+      "expected": "block"
+    },
+    {
+      "event": "pre-tool-use",
+      "inputShape": "codex",
+      "input": {
+        "tool_name": "exec_command",
+        "cwd": "/tmp",
+        "tool_input": {
+          "cmd": ["git", "push", "--force", "origin", "topic"],
+          "workdir": "/tmp"
+        }
+      },
+      "expected": "block"
+    },
+    {
+      "event": "pre-tool-use",
+      "inputShape": "claude",
+      "input": {
+        "tool_name": "Bash",
+        "cwd": "/tmp",
+        "tool_input": {
+          "command": "git push --force-with-lease origin topic",
+          "cwd": "/tmp"
+        }
+      },
+      "expected": null
+    },
+    {
+      "event": "pre-tool-use",
+      "inputShape": "codex",
+      "input": {
+        "tool_name": "exec_command",
+        "cwd": "/tmp",
+        "tool_input": {
+          "cmd": ["git", "push", "origin", "topic"],
+          "workdir": "/tmp"
+        }
+      },
+      "expected": null
+    }
+  ]
+}

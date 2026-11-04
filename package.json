@@ -12,6 +12,7 @@
     "typescript": "7.0.2"
   },
   "dependencies": {
+    "@ast-grep/cli": "0.51.1",
     "commonmark": "0.31.2",
     "typebox": "1.4.3"
   },

@@ -11,6 +11,9 @@
       "type": "string",
       "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
     },
+    "hooks": {
+      "type": "boolean"
+    },
     "profile": {
       "type": "object",
       "patternProperties": {
@@ -48,27 +51,12 @@
               "parts": {
                 "type": "array",
                 "items": {
-                  "anyOf": [
-                    {
-                      "type": "string",
-                      "const": "context"
-                    },
-                    {
-                      "type": "string",
-                      "const": "knowledge"
-                    },
-                    {
-                      "type": "string",
-                      "const": "actions"
-                    },
-                    {
-                      "type": "string",
-                      "const": "checks"
-                    },
-                    {
-                      "type": "string",
-                      "const": "loop"
-                    }
+                  "enum": [
+                    "context",
+                    "knowledge",
+                    "actions",
+                    "checks",
+                    "loop"
                   ]
                 },
                 "minItems": 1,
@@ -138,27 +126,12 @@
               "parts": {
                 "type": "array",
                 "items": {
-                  "anyOf": [
-                    {
-                      "type": "string",
-                      "const": "context"
-                    },
-                    {
-                      "type": "string",
-                      "const": "knowledge"
-                    },
-                    {
-                      "type": "string",
-                      "const": "actions"
-                    },
-                    {
-                      "type": "string",
-                      "const": "checks"
-                    },
-                    {
-                      "type": "string",
-                      "const": "loop"
-                    }
+                  "enum": [
+                    "context",
+                    "knowledge",
+                    "actions",
+                    "checks",
+                    "loop"
                   ]
                 },
                 "minItems": 1,
@@ -223,27 +196,12 @@
           "parts": {
             "type": "array",
             "items": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "const": "context"
-                },
-                {
-                  "type": "string",
-                  "const": "knowledge"
-                },
-                {
-                  "type": "string",
-                  "const": "actions"
-                },
-                {
-                  "type": "string",
-                  "const": "checks"
-                },
-                {
-                  "type": "string",
-                  "const": "loop"
-                }
+              "enum": [
+                "context",
+                "knowledge",
+                "actions",
+                "checks",
+                "loop"
               ]
             },
             "minItems": 1,

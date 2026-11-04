@@ -1,7 +1,8 @@
+import { configDirectory } from "./config.ts";
 import type { spawn } from "node:child_process";
 import { mkdir, mkdtemp, realpath, rm } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
-import { homedir, tmpdir } from "node:os";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { readHarness } from "./apply.ts";
 import {
@@ -132,12 +133,9 @@ async function state(targetPath: string, packageRoot = PACKAGE_ROOT) {
 }
 
 export function maintenanceUserConfigPath(configPath?: string): string {
-  if (configPath) return resolve(configPath);
-  const directory =
-    process.platform === "win32"
-      ? (process.env.APPDATA ?? join(homedir(), "AppData", "Roaming"))
-      : join(homedir(), ".config");
-  return join(directory, "meta-harness", "maintenance.json");
+  return configPath
+    ? resolve(configPath)
+    : join(configDirectory(), "maintenance.json");
 }
 
 export function expandMaintenanceArgv(

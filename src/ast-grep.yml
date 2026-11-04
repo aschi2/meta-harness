@@ -1,0 +1,2 @@
+# Only explicitly supplied rules may be loaded by the checks runtime.
+ruleDirs: []
