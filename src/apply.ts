@@ -212,16 +212,16 @@ async function newManifest(
   packageRoot: string,
   old?: HarnessManifest,
 ): Promise<HarnessManifest> {
-  const plugin: unknown = await Bun.file(
-    join(packageRoot, ".claude-plugin/plugin.json"),
+  const metadata: unknown = await Bun.file(
+    join(packageRoot, "package.json"),
   ).json();
   if (
-    typeof plugin !== "object" ||
-    plugin === null ||
-    !("version" in plugin) ||
-    typeof plugin.version !== "string"
+    typeof metadata !== "object" ||
+    metadata === null ||
+    !("version" in metadata) ||
+    typeof metadata.version !== "string"
   )
-    throw new Error("Invalid plugin version");
+    throw new Error("Invalid package version");
   const versions = new Map(
     (old?.packs ?? []).map((source) => [source.name, source]),
   );
@@ -233,7 +233,7 @@ async function newManifest(
   });
   return {
     ...old,
-    metaHarnessVersion: plugin.version,
+    metaHarnessVersion: metadata.version,
     kbEntry: await knowledgeEntry(pack),
     generatedAt: new Date().toISOString(),
     profile: plan.profile,

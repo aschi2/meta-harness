@@ -1,6 +1,6 @@
 {
   "name": "meta-harness",
-  "description": "Generate, update, check, and maintain domain-neutral agent harnesses using a deterministic Bun core and domain packs.",
+  "description": "Generate and maintain agent harnesses for any domain with a deterministic Bun core and domain packs.",
   "version": "0.13.0",
   "author": {
     "name": "Austin"

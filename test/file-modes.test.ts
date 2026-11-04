@@ -26,7 +26,7 @@ async function workspace() {
   directories.push(directory);
   const target = join(directory, "target");
   const packageRoot = join(directory, "package");
-  for (const path of ["packs/base", "packs/coding", ".claude-plugin"]) {
+  for (const path of ["packs/base", "packs/coding", "package.json"]) {
     await cp(join(root, path), join(packageRoot, path), { recursive: true });
   }
   const fixture = parsePlan(

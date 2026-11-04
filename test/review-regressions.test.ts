@@ -69,7 +69,7 @@ async function packageCopy(directory: string) {
   await cp(join(root, "packs/base"), join(packageRoot, "packs/base"), {
     recursive: true,
   });
-  await cp(join(root, ".claude-plugin"), join(packageRoot, ".claude-plugin"), {
+  await cp(join(root, "package.json"), join(packageRoot, "package.json"), {
     recursive: true,
   });
   return packageRoot;

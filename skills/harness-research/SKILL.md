@@ -39,5 +39,5 @@ You judge the findings; subagents only gather. For each topic file:
 
 - Add one entry at the TOP of `packs/coding/kb/CHANGELOG.md` (newest-first file) for the refresh, with a unique heading (date + short slug), topics touched, and a bullet per substantive change (added/changed/removed guidance) — this changelog is what `/harness-update` uses to scope upgrades, so a change that isn't logged effectively never happened.
 - If a change affects what generated harnesses should contain, say so explicitly in the final report and recommend running `/harness-update` on live repos.
-- Run `bun run src/cli.ts validate .` in the source checkout and resolve validation errors before reporting.
+- Run `meta-harness validate .` in the source checkout and resolve validation errors before reporting. If it is not on `PATH`, use the bundled CLI procedure in [CLI access](../cli.md).
 - Show the KB diff (`git diff` if the repo is under git, else summarize per file).

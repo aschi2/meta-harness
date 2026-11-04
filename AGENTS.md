@@ -1,23 +1,30 @@
-# meta-harness — agent instructions
+# meta-harness
 
-This repo contains a deterministic TypeScript core on Bun, domain packs, and a Claude Code plugin with five skills (`skills/*/SKILL.md`). `CLAUDE.md` is a symlink to this file.
+Open-source Bun/TypeScript core for plan-driven agent harnesses. `CLAUDE.md` is a symlink to this file.
 
-## Layout
+## Structure
 
-- `src/` — deterministic core and TypeBox schema source; `schemas/` — generated JSON Schemas (`bun run schemas`); `test/` — Bun tests and broken fixtures.
-- `packs/coding/`, `packs/knowledge-wiki/`, `packs/coaching/` — domain packs; `packs/base/` — implicitly included domain-neutral roles and scheduler recipes. Paths inside packs are pack-relative.
-
-- `skills/harness-new/`, `skills/harness-update/`, `skills/harness-research/`, `skills/harness-maintenance/`, `skills/harness-learn/` — the skills. Orchestration logic lives here; best-practice CONTENT lives in `packs/coding/kb/`. Never duplicate KB content into a SKILL.md.
-- `packs/coding/kb/` — the best-practices corpus. One topic per file, frontmatter with `reviewed:` date, claims cited inline as `(source URL, date)`. `packs/coding/kb/CHANGELOG.md` logs every refresh.
-- `packs/coding/templates/` — file templates the generator fills in. Templates carry `{{placeholders}}`; anything repo-specific is decided at generation time, not baked in.
+- `src/`: CLI, runtime schemas, file operations, checks, hooks, maintenance.
+- `schemas/`: published JSON Schemas; regenerate with `bun run schemas`.
+- `packs/`: coding, knowledge-wiki, coaching, and implicitly included base pack. Pack paths are relative to each pack root.
+- `skills/`: agent judgment and orchestration; call the installed `meta-harness` CLI, not source paths.
+- `docs/`: pack authoring and user-facing reference.
+- `test/`: unit, integration, and synthetic fixture tests. Never add personal data or machine-specific paths.
 
 ## Rules
 
-- KB edits must come from verifiable sources with dates, or be explicitly marked as preference/heuristic. No uncited "best practices".
-- When updating the KB, update `reviewed:` in the touched file's frontmatter and add an entry at the top of `packs/coding/kb/CHANGELOG.md` (newest-first) in the same change.
-- The manifest schema (`.harness/manifest.json`, defined in `src/schema.ts` and published under `schemas/`) is a compatibility contract: `/harness-update` in the field depends on it. Extend it additively; never rename or repurpose existing fields.
-- Keep skills lean: a SKILL.md is a procedure, not an essay. Push reference material into `packs/coding/kb/` or the skill's own `references/` dir.
+- The core owns deterministic file operations; skills interview, make judgments, write plans, and review results.
+- Extend schemas additively. Validate external data at command boundaries.
+- Keep overlays and trust approvals outside the repository. Never run install against the real home during tests.
+- Hooks ignore repo `bunfig.toml` and `.env`, run with deadlines, and fail open. Keep stdout limited to the hook protocol.
+- Knowledge claims need primary-source citations and dates, or an explicit heuristic/preference label. Update reviewed dates and the pack changelog together.
+- Keep package examples, fixtures, and docs synthetic and free of personal or user-specific content.
 
-## Verification
+## Verify
 
-Run `bun install`, then `bun run typecheck`, `bun test`, and `bun run src/cli.ts validate .`. The validator searches the repository's `packs/` directory; an explicit pack directory or packs directory is also accepted.
+```sh
+bun install
+bun run typecheck
+bun test
+bun run src/cli.ts validate .
+```

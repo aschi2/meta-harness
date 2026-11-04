@@ -15,3 +15,5 @@ Use this when the user asks to make a correction enforceable.
 Use current ast-grep documentation through Context7 for rule syntax. Do not claim a shell hook covers direct GUI actions.
 
 See [references/rules.md](references/rules.md) for rule module and fixture formats.
+
+If `meta-harness` is not on `PATH`, use the bundled CLI procedure in [CLI access](../cli.md).

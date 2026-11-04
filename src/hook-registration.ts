@@ -1,3 +1,4 @@
+import { assertPersistentHookInstall } from "./install-location.ts";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -17,6 +18,7 @@ function command(
   harness: HookHarness,
   overlay?: string,
 ): string {
+  assertPersistentHookInstall();
   const cli = fileURLToPath(new URL("./cli.ts", import.meta.url));
   const config = fileURLToPath(new URL("./hook.bunfig.toml", import.meta.url));
   const runtime = quoteArgument(process.execPath);

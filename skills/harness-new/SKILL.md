@@ -26,7 +26,7 @@ The agent interviews and writes tailored prose; the core performs every target f
 
 Read the selected pack's declared knowledge, templates and formats. For coding only, include matching topics in `packs/coding/kb/`, `packs/coding/kb/languages/*.md` and `packs/coding/kb/archetypes/*.md`. Apply conditional guidance and identify contested choices. Every profile must match its pack's declared schema.
 
-Write a JSON plan conforming to `${CLAUDE_PLUGIN_ROOT}/schemas/plan.schema.json`:
+Write a JSON plan conforming to the bundled `schemas/plan.schema.json`:
 
 - `pack`: the selected pack name; `profile`: the discovered profile validated against that pack's profile schema.
 - `files`: entries with `path`, `parts` (one or more of context, knowledge, actions, checks, loop), a `mode` (`managed`, `seed`, or `owner`), and either `content` or `template` plus string `variables`. Templates must be declared in the pack; paths are target-relative, template paths are pack-relative. Tailor prose; fill every placeholder or use inline content with unnecessary sections removed.
@@ -39,9 +39,11 @@ Keep instructions within the selected tool's budgets. Include only justified act
 ## 3. Apply and review
 
 ```bash
-bun run "${CLAUDE_PLUGIN_ROOT}/src/cli.ts" init --pack "<selected-pack>" --plan "<plan.json>" --target "<target-dir>"
-bun run "${CLAUDE_PLUGIN_ROOT}/src/cli.ts" check --target "<target-dir>"
+meta-harness init --pack "<selected-pack>" --plan "<plan.json>" --target "<target-dir>"
+meta-harness check --target "<target-dir>"
 ```
+
+If `meta-harness` is not on `PATH`, use the bundled CLI procedure in [CLI access](../cli.md). Resolve the plugin root as documented there; do not call a development source path directly.
 
 Review the report and generated artifacts. On refusal, correct the plan or ask about the specific collision; do not manually write, hash, baseline, merge or symlink target files. Private overlays and repo-external setup are outside this command's ownership; report them without executing them.
 

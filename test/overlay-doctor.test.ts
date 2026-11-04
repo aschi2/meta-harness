@@ -214,7 +214,7 @@ export async function doctorFixture(directory: string) {
   await cp(join(root, "packs"), join(packageRoot, "packs"), {
     recursive: true,
   });
-  await cp(join(root, ".claude-plugin"), join(packageRoot, ".claude-plugin"), {
+  await cp(join(root, "package.json"), join(packageRoot, "package.json"), {
     recursive: true,
   });
   const target = join(directory, "harness");

@@ -2,6 +2,10 @@
 
 Newest first — new entries go at the top, with a unique heading (date + short slug). `/harness-update` scopes upgrades to the entries above a manifest's recorded `kbEntry`.
 
+## 2026-11-03 — portable path examples
+
+- automation-surface: remove a machine-home path literal from the public package; editorial wording only, with no change to the portability guidance.
+
 ## 2026-11-03 — deterministic instruction budgets
 
 - context-files: distinguish Claude Code startup byte limits from authoring guidance; record Cursor guidance and the absence of a documented pi cap. Codex checking includes global instructions plus the applicable project chain as utility policy. The coding pack declares these budgets for deterministic `check`; generated harnesses should be rechecked.

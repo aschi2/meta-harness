@@ -17,6 +17,7 @@ import {
   maintenanceStatus,
 } from "./maintenance.ts";
 import { validate } from "./validate.ts";
+import { PACKAGE_ROOT } from "./packs.ts";
 
 const USAGE =
   "meta-harness validate [path] | init --pack <name> --plan <plan.json> --target <dir> | update --plan <plan.json> --target <dir> | check --target <dir> | approve <path>|--rules --target <dir>";
@@ -220,7 +221,9 @@ try {
     });
     if (positionals.length > 1 || (values.overlay && positionals.length))
       throw new Error("validate: use [path] or --overlay <path>");
-    const result = await validate(values.overlay ?? positionals[0] ?? ".");
+    const result = await validate(
+      values.overlay ?? positionals[0] ?? PACKAGE_ROOT,
+    );
     if (result.errors.length) throw new Error(result.errors.join("\n"));
     if (values.overlay) await overlayPacks(values.overlay);
     process.stdout.write(

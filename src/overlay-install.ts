@@ -1,3 +1,4 @@
+import { assertPersistentHookInstall } from "./install-location.ts";
 import { randomUUID } from "node:crypto";
 import {
   chmod,
@@ -236,6 +237,7 @@ async function backupBeforeWrite(
 export async function overlayInstall(
   options: OverlayInstallOptions = {},
 ): Promise<string[]> {
+  assertPersistentHookInstall();
   const home = resolve(options.home ?? homedir());
   const env = installationEnvironment(options);
   const overlay = options.overlay ? resolve(options.overlay) : undefined;

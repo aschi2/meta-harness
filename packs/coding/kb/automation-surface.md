@@ -1,6 +1,6 @@
 ---
 topic: automation-surface
-reviewed: 2026-09-02
+reviewed: 2026-11-03
 ---
 
 # Automation surface: skills, hooks, subagents, permissions, verification
@@ -36,7 +36,7 @@ What executable/config machinery a generated harness includes. Governing princip
 
 Generated config is copied to other machines — a Linux VM, a container, a teammate's laptop. A machine-absolute path silently disables whatever references it. Rules for anything the generator writes:
 
-- Never emit a machine-absolute path (`/Users/...`, `/home/<name>/...`, `/opt/homebrew/...`). Use `~` or `$HOME`, or a repo-relative path.
+- Never emit a machine-absolute path (a specific home directory or package-manager prefix). Use `~` or `$HOME`, or a repo-relative path.
 - Know which fields expand what, because it differs per tool and per field (all verified 2026-08-28 on codex-cli 0.147.0 / current Claude Code):
   - Claude Code hook `command` strings run through a shell, so `"$HOME"` expands — quote it: `sh -c 'bash "$HOME"/.claude/hooks/x.sh'`.
   - Claude Code marketplace `source.path` expands `~`.
