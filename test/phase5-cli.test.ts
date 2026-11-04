@@ -148,6 +148,14 @@ test(
       directory,
     ]);
     expect(init.code, init.error).toBe(0);
+    const enable = cli(directory, [
+      "maintenance",
+      "enable",
+      "dead-code-remover",
+      "--target",
+      directory,
+    ]);
+    expect(enable.code, enable.error).toBe(0);
     const report = cli(directory, [
       "doctor",
       "--target",
@@ -157,6 +165,7 @@ test(
     ]);
     expect(report.code, report.error).toBe(0);
     expect(report.out).toContain("0 error(s)");
+    expect(report.out).toContain("WARNING [agent]");
     expect(report.out).toContain("Fix:");
     const invalid = cli(directory, [
       "doctor",
