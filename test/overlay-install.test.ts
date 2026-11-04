@@ -19,6 +19,7 @@ import {
   mergeHookSettings,
 } from "../src/hook-registration.ts";
 import { overlayInstall, overlayUninstall } from "../src/overlay-install.ts";
+import { configDirectory } from "../src/config.ts";
 import {
   windowsShimScript,
   type AppServerSpawner,
@@ -264,7 +265,7 @@ test(
         name.includes("meta-harness-backup"),
       ),
     ).toBe(true);
-    const journalPath = join(home, ".config/meta-harness/overlay-install.json");
+    const journalPath = join(configDirectory(home, {}), "overlay-install.json");
     const journalText = await readFile(journalPath, "utf8");
     const journal = JSON.parse(journalText) as { files: unknown[] };
     if (process.platform !== "win32")
