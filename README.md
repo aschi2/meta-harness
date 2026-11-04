@@ -25,23 +25,7 @@ Restart Claude Code or reload plugins, then invoke `/meta-harness:harness-new`.
 
 ## Quickstarts
 
-In a software repository, run `/meta-harness:harness-new`, choose the **coding** pack, and answer the questions about tools, tests, project structure, and conventions. Review the proposed files, then let the skill apply and check the harness. For a direct CLI example, save this as `coding-plan.json` and target an empty directory:
-
-```json
-{
-  "pack": "coding",
-  "profile": { "sizeTier": "S", "languages": ["typescript"], "targets": [] },
-  "files": [
-    {
-      "path": "AGENTS.md",
-      "parts": ["context"],
-      "mode": "managed",
-      "content": "# Project instructions\n\n## Verify\n\nRun the project tests before finishing.\n"
-    }
-  ],
-  "symlinks": []
-}
-```
+Run `/meta-harness:harness-new` and choose **coding**. For the direct CLI path, save [coding-plan.json](https://github.com/aschi2/meta-harness/blob/main/examples/coding-plan.json), then run:
 
 ```sh
 mkdir coding-harness
@@ -49,52 +33,7 @@ meta-harness init --pack coding --plan coding-plan.json --target ./coding-harnes
 meta-harness check --target ./coding-harness
 ```
 
-For a source wiki, run `/meta-harness:harness-new`, choose **knowledge-wiki**, and describe the topic, source types, ingest cadence, and whether you approve wiki edits. The pack supplies source and analysis templates plus `wiki-lint`; keep original material under `raw/` and let the workflow create cited pages. This minimal `wiki-plan.json` makes the entry pages without inventing source material:
-
-```json
-{
-  "pack": "knowledge-wiki",
-  "profile": {
-    "topic": "Example topic",
-    "sourceTypes": ["reports", "articles"],
-    "ingestCadence": "on demand",
-    "approveEdits": true
-  },
-  "files": [
-    {
-      "path": "AGENTS.md",
-      "parts": ["context"],
-      "mode": "managed",
-      "content": "# Wiki instructions\n\nKeep existing raw sources immutable. Maintain cited pages under wiki/ and link them from the index. Run meta-harness check --target . before finishing.\n"
-    },
-    {
-      "path": "profile.json",
-      "parts": ["context"],
-      "mode": "owner",
-      "content": "{\"topic\":\"Example topic\",\"sourceTypes\":[\"reports\",\"articles\"],\"ingestCadence\":\"on demand\",\"approveEdits\":true}\n"
-    },
-    {
-      "path": "wiki/index.md",
-      "parts": ["knowledge"],
-      "mode": "seed",
-      "content": "---\ntitle: Index\ntype: index\n---\n\n# Index\n\n- [Overview](overview.md)\n"
-    },
-    {
-      "path": "wiki/overview.md",
-      "parts": ["knowledge"],
-      "mode": "seed",
-      "content": "---\ntitle: Overview\ntype: overview\n---\n\n# Overview\n\nAdd cited summaries as sources arrive.\n"
-    },
-    {
-      "path": "wiki/log.md",
-      "parts": ["loop"],
-      "mode": "seed",
-      "content": "---\ntitle: Log\ntype: log\n---\n\n# Log\n\n## 2026-11-03 Initialized\n\n- Created the wiki structure.\n"
-    }
-  ],
-  "symlinks": []
-}
-```
+Run `/meta-harness:harness-new` and choose **knowledge-wiki**. For the direct CLI path, save [wiki-plan.json](https://github.com/aschi2/meta-harness/blob/main/examples/wiki-plan.json), then run:
 
 ```sh
 mkdir wiki-harness

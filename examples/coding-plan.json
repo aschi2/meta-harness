@@ -1,0 +1,13 @@
+{
+  "pack": "coding",
+  "profile": { "sizeTier": "S", "languages": ["typescript"], "targets": [] },
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "parts": ["context"],
+      "mode": "managed",
+      "content": "# Project instructions\n\n## Verify\n\nRun the project tests before finishing.\n"
+    }
+  ],
+  "symlinks": []
+}

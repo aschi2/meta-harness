@@ -1,28 +1,25 @@
 import { expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
+import { parsePlan } from "../src/schema.ts";
 import { INTEGRATION_TIMEOUT_MS } from "./constants.ts";
 
 const root = join(import.meta.dir, "..");
-const readme = await Bun.file(join(root, "README.md")).text();
-const plans = [...readme.matchAll(/```json\n([\s\S]+?)\n```/g)].map((match) =>
-  JSON.parse(match[1]!),
+const planPaths = await Array.fromAsync(
+  new Bun.Glob("examples/*-plan.json").scan(root),
 );
 
 test(
-  "both README quickstarts initialize and pass check through the real CLI",
+  "all example plans validate, initialize and pass check through the real CLI",
   async () => {
-    expect(plans.map((plan) => plan.pack).sort()).toEqual([
-      "coding",
-      "knowledge-wiki",
-    ]);
+    expect(planPaths.length).toBeGreaterThan(0);
     const directory = await mkdtemp(join(tmpdir(), "readme-quickstarts-"));
     try {
-      for (const plan of plans) {
-        const target = join(directory, plan.pack);
-        const planPath = join(directory, `${plan.pack}.json`);
-        await Bun.write(planPath, JSON.stringify(plan));
+      for (const path of planPaths) {
+        const planPath = join(root, path);
+        const plan = parsePlan(await Bun.file(planPath).json());
+        const target = join(directory, basename(path, ".json"));
         for (const args of [
           ["init", "--pack", plan.pack, "--plan", planPath, "--target", target],
           ["check", "--target", target],

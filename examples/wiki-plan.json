@@ -1,0 +1,42 @@
+{
+  "pack": "knowledge-wiki",
+  "profile": {
+    "topic": "Example topic",
+    "sourceTypes": ["reports", "articles"],
+    "ingestCadence": "on demand",
+    "approveEdits": true
+  },
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "parts": ["context"],
+      "mode": "managed",
+      "content": "# Wiki instructions\n\nKeep existing raw sources immutable. Maintain cited pages under wiki/ and link them from the index. Run meta-harness check --target . before finishing.\n"
+    },
+    {
+      "path": "profile.json",
+      "parts": ["context"],
+      "mode": "owner",
+      "content": "{\"topic\":\"Example topic\",\"sourceTypes\":[\"reports\",\"articles\"],\"ingestCadence\":\"on demand\",\"approveEdits\":true}\n"
+    },
+    {
+      "path": "wiki/index.md",
+      "parts": ["knowledge"],
+      "mode": "seed",
+      "content": "---\ntitle: Index\ntype: index\n---\n\n# Index\n\n- [Overview](overview.md)\n"
+    },
+    {
+      "path": "wiki/overview.md",
+      "parts": ["knowledge"],
+      "mode": "seed",
+      "content": "---\ntitle: Overview\ntype: overview\n---\n\n# Overview\n\nAdd cited summaries as sources arrive.\n"
+    },
+    {
+      "path": "wiki/log.md",
+      "parts": ["loop"],
+      "mode": "seed",
+      "content": "---\ntitle: Log\ntype: log\n---\n\n# Log\n\n## 2026-11-03 Initialized\n\n- Created the wiki structure.\n"
+    }
+  ],
+  "symlinks": []
+}
