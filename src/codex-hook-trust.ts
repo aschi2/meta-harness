@@ -1,7 +1,7 @@
 import { spawn as nodeSpawn } from "node:child_process";
 import { readFile, realpath } from "node:fs/promises";
 import { createInterface } from "node:readline";
-import { dirname, resolve, win32 } from "node:path";
+import { resolve, win32 } from "node:path";
 import type { Readable, Writable } from "node:stream";
 import { hookEntries } from "./hook-registration.ts";
 
@@ -36,6 +36,7 @@ export function windowsShimScript(
 export interface CodexTrustOptions {
   home: string;
   overlay?: string;
+  registrations: ReturnType<typeof hookEntries>;
   sourcePaths: string[];
   addedEvents: Array<"PreToolUse" | "Stop">;
   env?: NodeJS.ProcessEnv;
@@ -141,13 +142,13 @@ async function rpc(
 async function requestedEvents(
   result: Record<string, unknown>,
   addedEvents: Array<"PreToolUse" | "Stop">,
-  overlay?: string,
+  registrations: ReturnType<typeof hookEntries>,
   sourcePaths: string[] = [],
 ) {
   const data = (result.result as Record<string, unknown> | undefined)?.data;
   if (!Array.isArray(data))
     throw new Error("Codex hooks/list returned no hook data");
-  const registrations = hookEntries("codex", overlay).filter(({ event }) =>
+  const selectedRegistrations = registrations.filter(({ event }) =>
     addedEvents.includes(event),
   );
   const canonicalSources = await Promise.all(
@@ -155,6 +156,8 @@ async function requestedEvents(
       async (path) => await realpath(path).catch(() => resolve(path)),
     ),
   );
+  const unjournaled: string[] = [];
+  const matched: Array<{ key: string; trustStatus: unknown }> = [];
   const candidates = new Map<string, Array<{ key: string; hash: string }>>();
   for (const entry of data) {
     if (
@@ -172,31 +175,57 @@ async function requestedEvents(
               resolve(metadata.sourcePath as string),
             )
           : undefined;
-      const registration = registrations.find(({ event, entry: value }) => {
-        const command = (value.hooks as Array<Record<string, unknown>>)[0]
-          ?.command;
-        const expectedEvent = event === "PreToolUse" ? "preToolUse" : "stop";
-        const expectedMatcher =
-          event === "PreToolUse"
-            ? "^(Bash|shell|local_shell|run_command|exec_command)$"
-            : null;
-        const expectedTimeout = 120;
-        const knownSource = canonicalSources.some((candidate) =>
-          process.platform === "win32"
-            ? resolve(candidate).toLowerCase() === sourcePath?.toLowerCase()
-            : resolve(candidate) === sourcePath,
+      const knownSource = canonicalSources.some((candidate) =>
+        process.platform === "win32"
+          ? resolve(candidate).toLowerCase() === sourcePath?.toLowerCase()
+          : resolve(candidate) === sourcePath,
+      );
+      const knownCommand = registrations.some(
+        ({ entry }) =>
+          Array.isArray(entry.hooks) &&
+          entry.hooks.some(
+            (handler: unknown) =>
+              typeof handler === "object" &&
+              handler !== null &&
+              "command" in handler &&
+              handler.command === metadata.command,
+          ),
+      );
+      if (
+        knownSource &&
+        metadata.handlerType === "command" &&
+        typeof metadata.command === "string" &&
+        /(?:^|[\\/])hook\.bunfig\.toml(?:['"\s]|$)/.test(metadata.command) &&
+        /(?:^|[\\/])cli\.ts['"]?\s+hook\s+(?:pre-tool-use|stop)(?:\s|$)/.test(
+          metadata.command,
+        ) &&
+        !knownCommand
+      )
+        unjournaled.push(
+          `${String(metadata.key)}: meta-harness-shaped user hook absent from the overlay install journal; cannot verify`,
         );
-        return (
-          metadata.handlerType === "command" &&
-          metadata.command === command &&
-          metadata.eventName === expectedEvent &&
-          (event === "PreToolUse"
-            ? metadata.matcher === expectedMatcher
-            : metadata.matcher == null) &&
-          metadata.timeoutSec === expectedTimeout &&
-          knownSource
-        );
-      });
+      const registration = selectedRegistrations.find(
+        ({ event, entry: value }) => {
+          const command = (value.hooks as Array<Record<string, unknown>>)[0]
+            ?.command;
+          const expectedEvent = event === "PreToolUse" ? "preToolUse" : "stop";
+          const expectedMatcher =
+            event === "PreToolUse"
+              ? "^(Bash|shell|local_shell|run_command|exec_command)$"
+              : null;
+          const expectedTimeout = 120;
+          return (
+            metadata.handlerType === "command" &&
+            metadata.command === command &&
+            metadata.eventName === expectedEvent &&
+            (event === "PreToolUse"
+              ? metadata.matcher === expectedMatcher
+              : metadata.matcher == null) &&
+            metadata.timeoutSec === expectedTimeout &&
+            knownSource
+          );
+        },
+      );
       if (!registration) continue;
       if (
         typeof metadata.key !== "string" ||
@@ -205,6 +234,7 @@ async function requestedEvents(
         throw new Error(
           "Codex hooks/list entry is missing its key or currentHash",
         );
+      matched.push({ key: metadata.key, trustStatus: metadata.trustStatus });
       const entries = candidates.get(registration.event) ?? [];
       entries.push({ key: metadata.key, hash: metadata.currentHash });
       candidates.set(registration.event, entries);
@@ -221,13 +251,100 @@ async function requestedEvents(
     const entry = entries[0];
     if (entry) updates[entry.key] = { trusted_hash: entry.hash };
   }
-  return { updates, ambiguous };
+  return { updates, ambiguous, matched, unjournaled };
 }
 
 export async function approveAddedCodexHooks(
   options: CodexTrustOptions,
 ): Promise<string[]> {
   if (options.addedEvents.length === 0) return [];
+  return withCodexHooks(options, async (listing, write) => {
+    const { updates, ambiguous } = await requestedEvents(
+      listing,
+      options.addedEvents,
+      options.registrations,
+      options.sourcePaths,
+    );
+    if (Object.keys(updates).length) await write(updates);
+    const messages = Object.keys(updates).length
+      ? [
+          `Trusted ${Object.keys(updates).length} Codex hook entr${Object.keys(updates).length === 1 ? "y" : "ies"}.`,
+        ]
+      : [];
+    if (ambiguous.length)
+      messages.push(
+        `Could not uniquely identify added Codex hook(s): ${ambiguous.join(", ")}; review them with /hooks.`,
+      );
+    return messages.length
+      ? messages
+      : [
+          "Codex did not report the newly added hooks; open /hooks to review them.",
+        ];
+  });
+}
+
+export async function inspectCodexHooks(
+  options: CodexTrustOptions,
+  target: string,
+  includeProject = true,
+) {
+  const findings: Array<{
+    level: "error" | "warning" | "info";
+    message: string;
+  }> = [];
+  try {
+    const messages = await withCodexHooks(
+      options,
+      async (listing) => {
+        const user = await requestedEvents(
+          listing,
+          options.addedEvents,
+          options.registrations,
+          options.sourcePaths,
+        );
+        const project = includeProject
+          ? await requestedEvents(
+              listing,
+              ["PreToolUse", "Stop"],
+              hookEntries("codex"),
+              [resolve(target, ".codex/hooks.json")],
+            )
+          : { matched: [] };
+        for (const entry of [...user.matched, ...project.matched])
+          findings.push({
+            level: entry.trustStatus === "trusted" ? "info" : "error",
+            message: `${entry.key}: trustStatus ${String(entry.trustStatus)}`,
+          });
+        for (const message of user.unjournaled)
+          findings.push({ level: "warning", message });
+        return [];
+      },
+      target,
+    );
+    for (const message of messages)
+      findings.push({
+        level: message.startsWith("Codex is not on PATH") ? "info" : "warning",
+        message,
+      });
+  } catch (error) {
+    findings.push({
+      level: "warning",
+      message: `Codex trust check failed: ${error instanceof Error ? error.message : String(error)}`,
+    });
+  }
+  return findings;
+}
+
+async function withCodexHooks(
+  options: CodexTrustOptions,
+  inspect: (
+    listing: Record<string, unknown>,
+    write: (
+      updates: Record<string, { trusted_hash: string }>,
+    ) => Promise<unknown>,
+  ) => Promise<string[]>,
+  cwd = options.home,
+): Promise<string[]> {
   const environment = options.env ?? process.env;
   const command =
     options.codexPath ??
@@ -273,16 +390,10 @@ export async function approveAddedCodexHooks(
       lines,
       1,
       "hooks/list",
-      { cwds: [options.home] },
+      { cwds: [cwd] },
       timeoutMs,
     );
-    const { updates, ambiguous } = await requestedEvents(
-      listing,
-      options.addedEvents,
-      options.overlay,
-      options.sourcePaths,
-    );
-    if (Object.keys(updates).length) {
+    return await inspect(listing, async (updates) => {
       await rpc(
         server,
         lines,
@@ -302,21 +413,7 @@ export async function approveAddedCodexHooks(
         },
         timeoutMs,
       );
-    }
-    const messages = Object.keys(updates).length
-      ? [
-          `Trusted ${Object.keys(updates).length} Codex hook entr${Object.keys(updates).length === 1 ? "y" : "ies"}.`,
-        ]
-      : [];
-    if (ambiguous.length)
-      messages.push(
-        `Could not uniquely identify added Codex hook(s): ${ambiguous.join(", ")}; review them with /hooks.`,
-      );
-    return messages.length
-      ? messages
-      : [
-          "Codex did not report the newly added hooks; open /hooks to review them.",
-        ];
+    });
   } finally {
     lineInterface.close();
     server.kill();

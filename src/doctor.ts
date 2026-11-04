@@ -1,28 +1,44 @@
+import {
+  inspectCodexHooks,
+  type CodexTrustOptions,
+} from "./codex-hook-trust.ts";
+import { lstat } from "node:fs/promises";
+import { overlayCodexTrustOptions } from "./overlay-install.ts";
 import { resolve } from "node:path";
 import { readHarness } from "./apply.ts";
 import { check } from "./check.ts";
-import { maintenanceStatus, maintenanceUserConfigPath } from "./maintenance.ts";
+import {
+  MAINTENANCE_CONFIG,
+  maintenanceStatus,
+  maintenanceUserConfigPath,
+} from "./maintenance.ts";
+import { readRegularFile } from "./maintenance-runtime.ts";
+import { safePath } from "./files.ts";
 import { overlayDirectory, overlayPacks } from "./overlay.ts";
 import { PACKAGE_ROOT } from "./packs.ts";
-import { parseMaintenanceUser } from "./schema.ts";
+import { parseMaintenance, parseMaintenanceUser } from "./schema.ts";
 import { localRulePaths, ruleApprovals } from "./rule-trust.ts";
 import type { RuleOptions } from "./rule-sources.ts";
 
 const DEFAULT_STALE_DAYS = 90;
 const DAY_MS = 86_400_000;
 export interface DoctorFinding {
-  level: "error" | "warning";
+  level: "error" | "warning" | "info";
   code: string;
   message: string;
   fix: string;
 }
 export interface DoctorOptions extends RuleOptions {
+  codexTrust?: Partial<CodexTrustOptions>;
   configPath?: string;
   staleDays?: number;
   now?: Date;
 }
 
-export async function doctor(targetPath: string, options: DoctorOptions = {}) {
+export async function doctor(
+  targetPath = process.cwd(),
+  options: DoctorOptions = {},
+) {
   const target = resolve(targetPath);
   const packageRoot = options.packageRoot ?? PACKAGE_ROOT;
   const staleDays = options.staleDays ?? DEFAULT_STALE_DAYS;
@@ -39,6 +55,40 @@ export async function doctor(targetPath: string, options: DoctorOptions = {}) {
   ) => findings.push({ level, code, message, fix });
   if (!Bun.which("git"))
     add("error", "git", "git is not on PATH", `<install git>; ${rerun}`);
+  const manifestExists = await lstat(
+    resolve(target, ".harness/manifest.json"),
+  ).then(
+    () => true,
+    (error: unknown) => {
+      if (error instanceof Error && "code" in error && error.code === "ENOENT")
+        return false;
+      throw error;
+    },
+  );
+  const trustFix = `meta-harness overlay trust${options.overlay ? ` --overlay ${JSON.stringify(resolve(options.overlay))}` : ""}`;
+  try {
+    const trustOptions = await overlayCodexTrustOptions({
+      ...options.codexTrust,
+    });
+    for (const finding of await inspectCodexHooks(
+      trustOptions,
+      target,
+      manifestExists,
+    ))
+      add(
+        finding.level,
+        "codex-trust",
+        finding.message,
+        finding.level === "info" ? "" : trustFix,
+      );
+  } catch (error) {
+    add(
+      "warning",
+      "codex-trust",
+      `Codex trust check failed: ${errorMessage(error)}`,
+      trustFix,
+    );
+  }
   const configPath = maintenanceUserConfigPath(options.configPath);
   try {
     if (await Bun.file(configPath).exists()) {
@@ -51,13 +101,24 @@ export async function doctor(targetPath: string, options: DoctorOptions = {}) {
           `Configured agent is not resolvable: ${executable ?? "empty argv"}`,
           `<install ${executable ?? "agent CLI"}>; ${rerun}`,
         );
-    } else
+    } else {
+      const maintenanceContent = manifestExists
+        ? await readRegularFile(await safePath(target, MAINTENANCE_CONFIG))
+        : undefined;
+      const maintenanceEnabled =
+        maintenanceContent !== undefined &&
+        Object.values(
+          parseMaintenance(JSON.parse(maintenanceContent)).roles,
+        ).some((role) => role.enabled);
       add(
-        "warning",
+        maintenanceEnabled ? "warning" : "info",
         "agent",
         `Agent not configured: ${configPath}`,
-        `<editor> ${JSON.stringify(configPath)}; ${rerun}`,
+        maintenanceEnabled
+          ? `<editor> ${JSON.stringify(configPath)}; ${rerun}`
+          : "",
       );
+    }
   } catch (error) {
     add(
       "error",
@@ -75,6 +136,13 @@ export async function doctor(targetPath: string, options: DoctorOptions = {}) {
       errorMessage(error),
       `meta-harness validate --overlay ${JSON.stringify(overlayDirectory(options.overlay))}`,
     );
+  }
+  if (!manifestExists) {
+    add("info", "harness", "not a harness: harness checks skipped", "");
+    return {
+      findings,
+      errors: findings.filter((finding) => finding.level === "error"),
+    };
   }
   try {
     const { manifest, packs } = await readHarness(target, packageRoot);

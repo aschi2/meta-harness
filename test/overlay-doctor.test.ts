@@ -330,7 +330,9 @@ test(
     ])
       expect(codes).toContain(code);
     expect(report.errors.length).toBeGreaterThan(0);
-    for (const finding of report.findings)
+    for (const finding of report.findings.filter(
+      (finding) => finding.level !== "info",
+    ))
       expect(finding.fix.length).toBeGreaterThan(0);
     expect(
       report.findings.find((finding) => finding.code === "owner")?.fix,
@@ -366,7 +368,43 @@ test(
     );
     expect(
       report.findings.find((finding) => finding.code === "agent")?.level,
-    ).toBe("warning");
+    ).toBe("info");
+    expect(
+      report.findings.find((finding) => finding.code === "agent")?.fix,
+    ).toBe("");
+    await Bun.write(
+      join(target, ".harness/maintenance.json"),
+      JSON.stringify({
+        roles: { "dead-code-remover": { enabled: true, cadence: "0 3 * * *" } },
+      }),
+    );
+    const enabledReport = await doctor(target, {
+      staleDays: 100000,
+      overlay: join(directory, "none"),
+      configPath: join(directory, "unconfigured.json"),
+    });
+    expect(
+      enabledReport.findings.find((finding) => finding.code === "agent"),
+    ).toMatchObject({
+      level: "warning",
+      fix: expect.stringContaining("<editor>"),
+    });
+    await Bun.write(
+      join(target, ".harness/maintenance.json"),
+      JSON.stringify({
+        roles: {
+          "dead-code-remover": { enabled: false, cadence: "0 3 * * *" },
+        },
+      }),
+    );
+    const disabledReport = await doctor(target, {
+      staleDays: 100000,
+      overlay: join(directory, "none"),
+      configPath: join(directory, "unconfigured.json"),
+    });
+    expect(
+      disabledReport.findings.find((finding) => finding.code === "agent"),
+    ).toMatchObject({ level: "info", fix: "" });
     await expect(doctor(target, { staleDays: -1 })).rejects.toThrow(
       "stale-days",
     );

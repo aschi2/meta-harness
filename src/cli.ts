@@ -1,6 +1,10 @@
 #!/usr/bin/env bun
 import { runHookIsolated, hookDeadlineMs } from "./hook-runtime.ts";
-import { overlayInstall, overlayUninstall } from "./overlay-install.ts";
+import {
+  overlayInstall,
+  overlayUninstall,
+  overlayTrust,
+} from "./overlay-install.ts";
 import { learnNew, learnTest, type LearnScope } from "./learn.ts";
 import { doctor } from "./doctor.ts";
 import { overlayPacks } from "./overlay.ts";
@@ -73,17 +77,20 @@ try {
       },
       strict: true,
     });
-    if (operation !== "install" && operation !== "uninstall")
-      throw new Error("overlay: expected install or uninstall");
-    if (operation === "uninstall" && values["dry-run"])
-      throw new Error("uninstall does not accept --dry-run");
-    const lines =
-      operation === "install"
-        ? await overlayInstall({
-            dryRun: values["dry-run"],
-            ...(values.overlay ? { overlay: values.overlay } : {}),
-          })
-        : await overlayUninstall();
+    if (
+      operation !== "install" &&
+      operation !== "uninstall" &&
+      operation !== "trust"
+    )
+      throw new Error("overlay: expected install, uninstall or trust");
+    if (operation !== "install" && values["dry-run"])
+      throw new Error(`${operation} does not accept --dry-run`);
+    const options = values.overlay ? { overlay: values.overlay } : {};
+    let lines: string[];
+    if (operation === "install")
+      lines = await overlayInstall({ ...options, dryRun: values["dry-run"] });
+    else if (operation === "trust") lines = await overlayTrust(options);
+    else lines = await overlayUninstall();
     process.stdout.write(lines.join("\n") + "\n");
   } else if (command === "learn") {
     const [operation, ...remaining] = arguments_;
@@ -142,10 +149,10 @@ try {
     });
     for (const finding of report.findings)
       process.stdout.write(
-        `${finding.level.toUpperCase()} [${finding.code}] ${finding.message}\n  Fix: ${finding.fix}\n`,
+        `${finding.level.toUpperCase()} [${finding.code}] ${finding.message}\n${finding.fix ? `  Fix: ${finding.fix}\n` : ""}`,
       );
     process.stdout.write(
-      `Doctor: ${report.errors.length} error(s), ${report.findings.length - report.errors.length} warning(s).\n`,
+      `Doctor: ${report.errors.length} error(s), ${report.findings.filter((finding) => finding.level === "warning").length} warning(s), ${report.findings.filter((finding) => finding.level === "info").length} info.\n`,
     );
     if (report.errors.length) process.exitCode = 1;
   } else if (command === "maintenance") {

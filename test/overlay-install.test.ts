@@ -3,6 +3,7 @@ import {
   mkdir,
   chmod,
   readFile,
+  realpath,
   readdir,
   rm,
   symlink,
@@ -18,12 +19,18 @@ import {
   hookRegistrationPaths,
   mergeHookSettings,
 } from "../src/hook-registration.ts";
-import { overlayInstall, overlayUninstall } from "../src/overlay-install.ts";
+import {
+  overlayInstall,
+  overlayUninstall,
+  overlayTrust,
+} from "../src/overlay-install.ts";
 import { configDirectory } from "../src/config.ts";
 import {
   windowsShimScript,
   type AppServerSpawner,
 } from "../src/codex-hook-trust.ts";
+
+import { doctor } from "../src/doctor.ts";
 
 const directories: string[] = [];
 import { INTEGRATION_TIMEOUT_MS } from "./constants.ts";
@@ -39,6 +46,19 @@ afterEach(async () => {
 async function temporaryHome(): Promise<string> {
   const path = await mkdtemp(join(tmpdir(), "meta-harness-overlay-test-"));
   directories.push(path);
+  return await realpath(path);
+}
+
+async function journal(home: string, added = hookEntries("codex")) {
+  const path = join(configDirectory(home, {}), "overlay-install.json");
+  await mkdir(dirname(path), { recursive: true });
+  await writeFile(
+    path,
+    JSON.stringify({
+      version: 1,
+      files: [{ harness: "codex", added, backups: [] }],
+    }),
+  );
   return path;
 }
 
@@ -46,6 +66,9 @@ function fakeCodex(
   calls: Record<string, unknown>[],
   sourcePath: string,
   overlay?: string,
+  statuses = ["trusted", "trusted"],
+  projectPath?: string,
+  userRegistrations = hookEntries("codex", overlay),
 ): AppServerSpawner {
   return () => {
     const stdin = new PassThrough();
@@ -67,20 +90,32 @@ function fakeCodex(
             data: [
               {
                 hooks: [
-                  ...hookEntries("codex", overlay).map(
-                    ({ event, entry }, index) => ({
-                      key: `hook-${index}`,
-                      currentHash: `hash-${index}`,
-                      eventName: event === "PreToolUse" ? "preToolUse" : "stop",
-                      sourcePath,
-                      handlerType: "command",
-                      command: (
-                        entry.hooks as Array<Record<string, unknown>>
-                      )[0]?.command,
-                      matcher: entry.matcher ?? null,
-                      timeoutSec: 120,
-                    }),
-                  ),
+                  ...userRegistrations.map(({ event, entry }, index) => ({
+                    key: `hook-${index}`,
+                    currentHash: `hash-${index}`,
+                    trustStatus: statuses[index],
+                    eventName: event === "PreToolUse" ? "preToolUse" : "stop",
+                    sourcePath,
+                    handlerType: "command",
+                    command: (entry.hooks as Array<Record<string, unknown>>)[0]
+                      ?.command,
+                    matcher: entry.matcher ?? null,
+                    timeoutSec: 120,
+                  })),
+                  ...hookEntries("codex").map(({ event, entry }, index) => ({
+                    key: `project-${index}`,
+                    currentHash: "project-hash",
+                    trustStatus: statuses[index],
+                    eventName: event === "PreToolUse" ? "preToolUse" : "stop",
+                    sourcePath:
+                      projectPath ??
+                      join(dirname(sourcePath), "project/.codex/hooks.json"),
+                    handlerType: "command",
+                    command: (entry.hooks as Array<Record<string, unknown>>)[0]
+                      ?.command,
+                    matcher: entry.matcher ?? null,
+                    timeoutSec: 120,
+                  })),
                   {
                     key: "substring-only",
                     currentHash: "must-not-trust-substring",
@@ -107,7 +142,11 @@ function fakeCodex(
                     eventName: "stop",
                     sourcePath: join(dirname(sourcePath), "other-hooks.json"),
                     handlerType: "command",
-                    command: "meta-harness hook stop --harness codex",
+                    command: (
+                      hookEntries("codex", overlay)[1]?.entry.hooks as Array<
+                        Record<string, unknown>
+                      >
+                    )[0]?.command,
                     matcher: null,
                     timeoutSec: 120,
                   },
@@ -660,3 +699,325 @@ test(
   },
   INTEGRATION_TIMEOUT_MS,
 );
+
+test("overlay trust only approves user meta-harness hooks and writes no settings or journal", async () => {
+  const home = await temporaryHome();
+  const calls: Record<string, unknown>[] = [];
+  const overlay = join(home, "overlay");
+  const journalPath = await journal(home, hookEntries("codex", overlay));
+  const before = await readFile(journalPath);
+  const messages = await overlayTrust({
+    home,
+    overlay,
+    codexPath: "fake-codex",
+    env: { HOME: home, PATH: "" },
+    spawnAppServer: fakeCodex(calls, join(home, ".codex/hooks.json"), overlay),
+  });
+  expect(messages).toContain("Trusted 2 Codex hook entries.");
+  const write = calls.find((call) => call.method === "config/batchWrite");
+  expect(write?.params).toMatchObject({
+    edits: [
+      {
+        value: {
+          "hook-0": { trusted_hash: "hash-0" },
+          "hook-1": { trusted_hash: "hash-1" },
+        },
+      },
+    ],
+  });
+  expect(await readFile(journalPath)).toEqual(before);
+  expect(await readdir(home)).toEqual([
+    process.platform === "win32" ? "AppData" : ".config",
+  ]);
+});
+
+test("reinstall preserves reformatted settings, inode and backup count", async () => {
+  const home = await temporaryHome();
+  const options = { home, env: { PATH: "" } };
+  await overlayInstall(options);
+  const paths = [
+    join(home, ".claude/settings.json"),
+    join(home, ".codex/hooks.json"),
+  ];
+  const before = await Promise.all(
+    paths.map(async (path) => {
+      const parsed = JSON.parse(await readFile(path, "utf8"));
+      for (const entries of Object.values(parsed.hooks) as Array<
+        Array<{ hooks: unknown[] }>
+      >)
+        for (const entry of entries)
+          Object.assign(entry, {
+            hooks: entry.hooks.map((handler) =>
+              Object.fromEntries(Object.entries(handler as object).reverse()),
+            ),
+          });
+      const text = JSON.stringify(parsed);
+      await writeFile(path, text);
+      return {
+        text,
+        inode: (await stat(path)).ino,
+        names: await readdir(dirname(path)),
+      };
+    }),
+  );
+  await overlayInstall(options);
+  for (const [index, path] of paths.entries()) {
+    const original = before[index];
+    if (!original) throw new Error("Missing settings snapshot");
+    expect(await readFile(path, "utf8")).toBe(original.text);
+    expect((await stat(path)).ino).toBe(original.inode);
+    expect(await readdir(dirname(path))).toEqual(original.names);
+  }
+});
+
+test("doctor checks user and harness trust read-only and handles missing, failed and timed out Codex", async () => {
+  const home = await temporaryHome();
+  const target = join(home, "harness");
+  await mkdir(join(target, ".harness"), { recursive: true });
+  await writeFile(join(target, ".harness/manifest.json"), "{}");
+  const overlay = join(home, "overlay");
+  const calls: Record<string, unknown>[] = [];
+  const journalPath = await journal(home, hookEntries("codex", overlay));
+  const journalBefore = await readFile(journalPath);
+  const options = {
+    home,
+    env: { HOME: home, PATH: "" },
+    codexPath: "fake-codex",
+    timeoutMs: 20,
+  };
+  const run = async (
+    codexTrust: NonNullable<
+      NonNullable<Parameters<typeof doctor>[1]>["codexTrust"]
+    >,
+  ) =>
+    (
+      await doctor(target, {
+        overlay,
+        configPath: join(home, "owner.json"),
+        codexTrust,
+      })
+    ).findings.filter((finding) => finding.code === "codex-trust");
+  const spawnAppServer = fakeCodex(
+    calls,
+    join(home, ".codex/hooks.json"),
+    overlay,
+    ["modified", "untrusted"],
+    join(target, ".codex/hooks.json"),
+  );
+  const findings = await run({ ...options, spawnAppServer });
+  expect(findings).toHaveLength(4);
+  expect(
+    findings.every(
+      (finding) =>
+        finding.level === "error" &&
+        finding.fix ===
+          `meta-harness overlay trust --overlay ${JSON.stringify(overlay)}`,
+    ),
+  ).toBe(true);
+  expect(findings.map((finding) => finding.message).join(" ")).toContain(
+    "modified",
+  );
+  expect(findings.map((finding) => finding.message).join(" ")).toContain(
+    "untrusted",
+  );
+  expect(calls.some((call) => call.method === "config/batchWrite")).toBe(false);
+  expect(
+    await run({
+      ...options,
+      spawnAppServer: fakeCodex([], join(home, ".codex/hooks.json"), overlay),
+    }),
+  ).toMatchObject([{ level: "info" }, { level: "info" }]);
+  expect(await run({ home, env: { PATH: "" } })).toMatchObject([
+    { level: "info", message: expect.stringContaining("not on PATH") },
+  ]);
+  expect(
+    await run({
+      ...options,
+      spawnAppServer: () => {
+        throw new Error("injected failure");
+      },
+    }),
+  ).toMatchObject([
+    { level: "warning", message: expect.stringContaining("injected failure") },
+  ]);
+  let killed = false;
+  expect(
+    await run({
+      ...options,
+      spawnAppServer: () => ({
+        stdin: new PassThrough(),
+        stdout: new PassThrough(),
+        kill: () => {
+          killed = true;
+        },
+      }),
+    }),
+  ).toMatchObject([
+    { level: "warning", message: expect.stringContaining("timed out") },
+  ]);
+  expect(killed).toBe(true);
+  expect(await readFile(journalPath)).toEqual(journalBefore);
+});
+
+test("doctor and overlay trust identify journaled commands from another install path", async () => {
+  const home = await temporaryHome();
+  const registrations = hookEntries("codex").map(({ event, entry }) => ({
+    event,
+    entry: {
+      ...entry,
+      hooks: (entry.hooks as Array<Record<string, unknown>>).map((handler) => ({
+        ...handler,
+        command: String(handler.command).replace(
+          join(import.meta.dir, "../src"),
+          join(home, "old-install/src"),
+        ),
+      })),
+    },
+  }));
+  const journalPath = await journal(home, registrations);
+  const before = await readFile(journalPath);
+  const calls: Record<string, unknown>[] = [];
+  const options = {
+    home,
+    env: { HOME: home, PATH: "" },
+    codexPath: "fake-codex",
+    spawnAppServer: fakeCodex(
+      calls,
+      join(home, ".codex/hooks.json"),
+      undefined,
+      ["modified", "modified"],
+      undefined,
+      registrations,
+    ),
+  };
+  const report = await doctor(home, {
+    overlay: join(home, "none"),
+    configPath: join(home, "agent.json"),
+    codexTrust: options,
+  });
+  expect(
+    report.findings.filter((finding) => finding.code === "codex-trust"),
+  ).toMatchObject([
+    { level: "error", message: "hook-0: trustStatus modified" },
+    { level: "error", message: "hook-1: trustStatus modified" },
+  ]);
+  expect(calls.some((call) => call.method === "config/batchWrite")).toBe(false);
+  expect(await overlayTrust(options)).toContain(
+    "Trusted 2 Codex hook entries.",
+  );
+  const write = calls.find((call) => call.method === "config/batchWrite");
+  expect(write?.params).toMatchObject({
+    edits: [
+      {
+        value: {
+          "hook-0": { trusted_hash: "hash-0" },
+          "hook-1": { trusted_hash: "hash-1" },
+        },
+      },
+    ],
+  });
+  expect(await readFile(journalPath)).toEqual(before);
+});
+
+test("doctor warns about unjournaled user hooks and skips harness checks on a plain directory", async () => {
+  const home = await temporaryHome();
+  await journal(home, hookEntries("codex").slice(0, 1));
+  const configPath = join(home, "agent.json");
+  await writeFile(
+    configPath,
+    JSON.stringify({
+      agent: [process.execPath, "{prompt_file}", "{worktree}"],
+    }),
+  );
+  const calls: Record<string, unknown>[] = [];
+  const codexTrust = {
+    home,
+    env: { HOME: home, PATH: "" },
+    codexPath: "fake-codex",
+    spawnAppServer: fakeCodex(calls, join(home, ".codex/hooks.json")),
+  };
+  const options = { overlay: join(home, "none"), configPath, codexTrust };
+  const report = await doctor(home, options);
+  expect(report.errors).toEqual([]);
+  expect(report.findings).toContainEqual({
+    level: "info",
+    code: "harness",
+    message: "not a harness: harness checks skipped",
+    fix: "",
+  });
+  expect(
+    report.findings.filter((finding) => finding.code === "codex-trust"),
+  ).toMatchObject([
+    { level: "info", message: "hook-0: trustStatus trusted", fix: "" },
+    {
+      level: "warning",
+      message: expect.stringContaining(
+        "absent from the overlay install journal",
+      ),
+    },
+  ]);
+  expect(await overlayTrust(codexTrust)).toContain(
+    "Trusted 1 Codex hook entry.",
+  );
+  const write = calls.find((call) => call.method === "config/batchWrite");
+  expect(write?.params).toMatchObject({
+    edits: [{ value: { "hook-0": { trusted_hash: "hash-0" } } }],
+  });
+  await journal(home);
+  const clean = await doctor(home, options);
+  expect(clean.errors).toEqual([]);
+  expect(
+    clean.findings.filter((finding) => finding.level === "warning"),
+  ).toEqual([]);
+});
+
+test("doctor CLI on a plain directory exits zero with or without an explicit target", async () => {
+  const home = await temporaryHome();
+  const binaryDirectory = join(home, "bin");
+  await mkdir(binaryDirectory);
+  const git = Bun.which("git");
+  if (!git) throw new Error("git required for doctor fixture");
+  await symlink(
+    git,
+    join(binaryDirectory, process.platform === "win32" ? "git.exe" : "git"),
+  );
+  const configPath = join(home, "agent.json");
+  for (const targetArguments of [["--target", home], []]) {
+    const result = Bun.spawnSync(
+      [
+        process.execPath,
+        join(import.meta.dir, "../src/cli.ts"),
+        "doctor",
+        ...targetArguments,
+        "--config",
+        configPath,
+        "--overlay",
+        join(home, "none"),
+      ],
+      {
+        cwd: home,
+        env: {
+          ...process.env,
+          HOME: home,
+          USERPROFILE: home,
+          APPDATA: join(home, "AppData"),
+          CODEX_HOME: join(home, ".codex"),
+          PATH: binaryDirectory,
+        },
+        timeout: INTEGRATION_TIMEOUT_MS,
+      },
+    );
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout.toString()).toContain(
+      "INFO [harness] not a harness: harness checks skipped",
+    );
+    expect(result.stdout.toString()).toContain(
+      "INFO [codex-trust] Codex is not on PATH",
+    );
+    expect(result.stdout.toString()).not.toContain("ERROR");
+    expect(result.stdout.toString()).toContain(
+      "INFO [agent] Agent not configured",
+    );
+    expect(result.stdout.toString()).not.toContain("Fix:");
+  }
+});

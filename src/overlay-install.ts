@@ -17,6 +17,7 @@ import { configDirectory } from "./config.ts";
 import {
   approveAddedCodexHooks,
   type AppServerSpawner,
+  type CodexTrustOptions,
 } from "./codex-hook-trust.ts";
 import { hookEntries, mergeHookSettings } from "./hook-registration.ts";
 
@@ -290,6 +291,18 @@ export async function overlayInstall(
     if (!path) continue;
     const current = await maybeRead(path);
     file = buildFile(file.harness, current, file, overlay);
+    const groups = parseJsonObject(current, path).hooks;
+    if (
+      typeof groups === "object" &&
+      groups !== null &&
+      hookEntries(file.harness, overlay).every(({ event, entry }) => {
+        const entries = (groups as Record<string, unknown>)[event];
+        return (
+          Array.isArray(entries) && entries.some((value) => equal(value, entry))
+        );
+      })
+    )
+      continue;
     const installed = Buffer.from(
       mergeHookSettings(current?.toString("utf8"), file.harness, overlay),
     );
@@ -301,34 +314,43 @@ export async function overlayInstall(
     messages.push(`Updated ${path}`);
     for (const backup of backedUp.backups) messages.push(`Backup ${backup}`);
   }
-  const codexFile = journal.files.find((file) => file.harness === "codex");
-  const addedEvents = [
-    ...new Set(codexFile?.added.map(({ event }) => event) ?? []),
-  ];
-  try {
-    messages.push(
-      ...(await approveAddedCodexHooks({
-        home,
-        ...(overlay ? { overlay } : {}),
-        sourcePaths: [
-          paths.find((entry) => entry.harness === "codex")?.path ??
-            resolve(home, ".codex/hooks.json"),
-        ],
-        addedEvents,
-        env,
-        ...(options.codexPath ? { codexPath: options.codexPath } : {}),
-        ...(options.spawnAppServer
-          ? { spawnAppServer: options.spawnAppServer }
-          : {}),
-        ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
-      })),
-    );
-  } catch (error) {
-    messages.push(
-      `Codex hook approval failed; open /hooks to review them: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
+  messages.push(...(await overlayTrust(options)));
   return messages;
+}
+
+export async function overlayCodexTrustOptions(
+  options: OverlayInstallOptions = {},
+): Promise<CodexTrustOptions> {
+  const home = resolve(options.home ?? homedir());
+  const env = installationEnvironment(options);
+  const journal = await readJournal(
+    join(configDirectory(home, env), JOURNAL_NAME),
+  );
+  const registrations =
+    journal?.files.find((file) => file.harness === "codex")?.added ?? [];
+  return {
+    ...options,
+    home,
+    env,
+    sourcePaths: [await settingsPath(home, ".codex/hooks.json")],
+    addedEvents: [...new Set(registrations.map(({ event }) => event))],
+    registrations,
+  };
+}
+
+export async function overlayTrust(
+  options: OverlayInstallOptions = {},
+): Promise<string[]> {
+  try {
+    const trustOptions = await overlayCodexTrustOptions(options);
+    if (trustOptions.registrations.length === 0)
+      return ["No journaled Codex hooks to trust; review hooks with /hooks."];
+    return await approveAddedCodexHooks(trustOptions);
+  } catch (error) {
+    return [
+      `Codex hook approval failed; open /hooks to review them: ${error instanceof Error ? error.message : String(error)}`,
+    ];
+  }
 }
 
 function removeOwnedEntries(
